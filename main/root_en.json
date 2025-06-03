@@ -48,6 +48,8 @@
 	"I11": "ESC",
 	"I12": "motor",
 	"I13": "both",
+	"I14": "soft",
+	"I15": "hard",
 	"H00": "(slide right and left to arm)",
 	"H01": "(RTTTL format is detected automatically)",
 	"H02": "An optional number in the beginning sets tempo (BPM);<br><b>_</b> (underscore) is a pause;<br><b>cdefgab</b> are low notes;<br><b>CDEFGAB</b> are high notes;<br><b>#</b> (pound) after a note makes it a sharp note;<br><b><i>n</i></b> (number) after a note or pause is a duration: 1 - 1/16 (default), 2 - 1/8, 3 - 3/16, 4 - 1/4, etc.<br><b>+</b> (plus) enables octave shift;<br><b>-</b> (minus) disables octave shift;<br>",

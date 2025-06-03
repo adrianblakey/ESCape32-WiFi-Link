@@ -48,6 +48,8 @@
 	"I11": "ESC",
 	"I12": "moteur",
 	"I13": "les deux",
+	"I14": "souple",
+	"I15": "brutal",
 	"H00": "(glisser a droite puis a gauche pour armer)",
 	"H01": "(détection automatique format RTTTL)",
 	"H02": "Un nombre en option au départ definit le rythme(BPM);<br><b>_</b> (underscore) est une pause;<br><b>cdefgab</b> sont des notes basses;<br><b>CDEFGAB</b> sont des notes hautes;<br><b>#</b> (pound) après une note ajoute un dièse;<br><b><i>n</i></b> (number) après une note définit la durée: 1 - 1/16 (default), 2 - 1/8, 3 - 3/16, 4 - 1/4, etc.<br><b>+</b> (plus) active le décalage d'octave;<br><b>-</b> (minus) désactive le décalage d'octave;<br>",
