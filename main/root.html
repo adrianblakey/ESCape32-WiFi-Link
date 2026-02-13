@@ -307,6 +307,7 @@ const params = {
 	duty_lock: ['I00', 'I14', 'I15'],
 	throt_mode: ['I04', 'I05', 'I06', 'I07'],
 	throt_rev: ['100%', '75%', '50%', '25%'],
+	throt_ztc: false,
 	throt_cal: false,
 	input_mode: ['I08', 'I09', 'I10', 'iBUS', 'SBUS', 'CRSF'],
 	telem_mode: ['KISS', 'KISS auto', 'iBUS', 'S.Port', 'CRSF'],
@@ -319,7 +320,7 @@ const params = {
 const deps = [
 	{ // Disable if checked
 		arm: ['throt_set'],
-		brushed: ['timing', 'sine_range', 'sine_power', 'freq_min', 'duty_spup', 'duty_ramp', 'duty_lock', 'prot_stall'],
+		brushed: ['timing', 'sine_range', 'sine_power', 'freq_min', 'duty_spup', 'duty_ramp', 'duty_lock', 'throt_ztc', 'prot_stall'],
 	},
 	{ // Enable if checked
 		damp: ['sine_range', 'sine_power', 'duty_lock'],
