@@ -3,286 +3,618 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ESCape32 Wi-Fi Link</title>
+<title>AART Remora™ Programmer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-	--222: #222;
-	--bbb: #bbb;
-	--ccc: #ccc;
-	--ddd: #ddd;
-	--eee: #eee;
-	--fff: #fff;
-	--red: #e20;
-	--grn: #090;
-	--sel: #3563bf;
-	--val: #39558f;
+	--bg:       #0d0e10;
+	--bg2:      #14161d;
+	--bg3:      #1c2030;
+	--bg4:      #252a38;
+	--border:   #333a4a;
+	--border2:  #4a5370;
+	--text:     #e2e6ef;
+	--text2:    #b0b8cc;
+	--text3:    #6e7a91;
+	--accent:   #8b5cf6;
+	--accent2:  #a78bfa;
+	--accentbg: rgba(139,92,246,0.12);
+	--accentbg2:rgba(139,92,246,0.22);
+	--red:      #e03030;
+	--redbg:    rgba(224,48,48,0.12);
+	--grn:      #2ecc71;
+	--grnbg:    rgba(46,204,113,0.12);
+	--sel:      #8b5cf6;
+	--val:      #a5d0ff;
+	--mono:     'JetBrains Mono', monospace;
 }
-@media (prefers-color-scheme: dark) {
-:root {
-	--222: #ddd;
-	--bbb: #666;
-	--ccc: #555;
-	--ddd: #444;
-	--eee: #333;
-	--fff: #222;
-	--red: #e20;
-	--grn: #2b2;
-	--sel: #72a2e0;
-	--val: #99c6ff;
-}}
-body {
-	font-family: -apple-system, "Trebuchet MS", Helvetica, Arial, sans-serif;
-	font-size: 1em;
-	line-height: 1.4em;
-	background: var(--fff);
-	color: var(--222);
-	padding: 0;
-	margin: 0;
+* { box-sizing: border-box; }
+html, body {
+	margin: 0; padding: 0;
+	background: var(--bg);
+	color: var(--text);
+	font-family: 'Barlow', sans-serif;
+	font-size: 15px;
+	line-height: 1.5;
+	min-height: 100vh;
 }
-#main {
-	padding: 0.4em;
-	margin: 0 auto;
-	min-width: 22em;
+/* ── HEADER ─────────────────────────────────────────── */
+#header {
+	background: var(--bg2);
+	border-bottom: 2px solid var(--accent);
+	padding: 0 1rem;
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	height: 52px;
 }
-p {
-	margin: 0.5em 0 0 0;
-}
-a {
-	color: var(--222);
-}
-b {
-	border: 1px solid var(--ccc);
-	border-radius: 2px;
-	background: var(--eee);
-	color: var(--red);
-	padding: 0.1em 0.2em;
-}
-hr {
-	background: none;
-	border: medium none;
-	border-bottom: 1px solid var(--ddd);
-	margin: 0.8em 0 0.6em 0;
-}
-label {
+#header .logo {
+	font-family: 'Rajdhani', sans-serif;
+	font-weight: 700;
+	font-size: 1.35rem;
+	letter-spacing: 0.12em;
+	color: var(--accent);
+	text-transform: uppercase;
 	white-space: nowrap;
 }
-input, button, select, textarea {
-	border: 1px solid var(--ccc);
-	border-radius: 5px;
-	background: var(--eee);
-	color: var(--val);
-	font-size: 1em;
-	padding: 0.2em 0.4em;
-	margin: 0;
+#header .subtitle {
+	font-family: 'Barlow', sans-serif;
+	font-size: 0.72rem;
+	font-weight: 300;
+	letter-spacing: 0.18em;
+	color: var(--text3);
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+#header .spacer { flex: 1; }
+#lang {
+	font-family: 'Barlow', sans-serif;
+	font-size: 0.75rem;
+	background: var(--bg3);
+	color: var(--text2);
+	border: 1px solid var(--border);
+	border-radius: 3px;
+	padding: 0.2em 0.5em;
 	cursor: pointer;
 }
-input:disabled {
-	background: var(--eee);
-	color: var(--bbb);
+#lang:focus { outline: 1px solid var(--accent); }
+
+/* ── MAIN LAYOUT ────────────────────────────────────── */
+#main {
+	max-width: 820px;
+	margin: 0 auto;
+	padding: 0.8rem 0.8rem 2rem;
+}
+
+/* ── TAB NAV ────────────────────────────────────────── */
+#menu {
+	display: flex;
+	gap: 2px;
+	margin-bottom: 0;
+	border-bottom: 2px solid var(--border);
+}
+#menu button.item {
+	font-family: 'Rajdhani', sans-serif;
+	font-size: 0.85rem;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	background: transparent;
+	color: var(--text3);
+	border: none;
+	border-bottom: 2px solid transparent;
+	border-radius: 0;
+	padding: 0.65em 1.2em;
+	cursor: pointer;
+	transition: color 0.15s, border-color 0.15s;
+	margin-bottom: -2px;
+}
+#menu button.item:hover { color: var(--text); background: transparent; }
+#menu button.item.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── TAB PANELS ─────────────────────────────────────── */
+.tab {
+	border: 1px solid var(--border);
+	border-top: none;
+	padding: 1.2rem;
+	background: var(--bg2);
+	display: none;
+}
+/* connecting / probing states */
+.tab.loading-state {
+	color: var(--text2);
+	font-size: 0.85rem;
+	letter-spacing: 0.05em;
+	display: flex;
+	align-items: center;
+	gap: 0.7rem;
+	padding: 1.4rem;
+}
+.tab.loading-state::before {
+	content: '';
+	display: inline-block;
+	width: 14px; height: 14px;
+	border: 2px solid var(--border2);
+	border-top-color: var(--accent);
+	border-radius: 50%;
+	animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── FORM ELEMENTS ──────────────────────────────────── */
+label { white-space: nowrap; font-size: 0.875rem; font-weight: 500; color: var(--text2); }
+.field-label { font-family: var(--mono); font-size: 0.78rem; color: var(--text2); letter-spacing: 0.02em; }
+.field-hint { font-size: 0.72rem; color: var(--text3); font-style: italic; }
+
+input, button, select, textarea {
+	font-family: 'Barlow', sans-serif;
+	font-size: 0.875rem;
+	background: var(--bg3);
+	color: var(--val);
+	border: 1px solid var(--border);
+	border-radius: 3px;
+	padding: 0.25em 0.5em;
+	margin: 0;
+	transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+	outline: none;
+	border-color: var(--accent);
+}
+input:disabled, select:disabled {
+	background: var(--bg2);
+	color: var(--text3);
+	cursor: not-allowed;
 }
 input[type=checkbox] {
-	margin: 0.1em;
+	width: 15px; height: 15px;
+	accent-color: var(--accent);
+	cursor: pointer;
+	vertical-align: middle;
 }
 input[type=range] {
-	/* Commented out due to a bug in Android. Thank you, Android! */
-	/*-webkit-appearance: none;
-	-moz-appearance: none;
-	appearance: none;*/
-	border-radius: 4px;
-	height: 1px;
-	width: 20em;
+	width: 100%;
+	max-width: 22em;
+	height: 3px;
+	border: none;
+	border-radius: 2px;
+	background: var(--border);
+	accent-color: var(--accent);
+	cursor: pointer;
+	padding: 0;
 }
-input[type=range]:hover {
-	background: var(--ddd);
-}
-input[type=range]:active {
-	background: var(--ccc);
-}
-button {
-	border-radius: 0;
-	transition: 0.2s;
-}
-button:hover {
-	background: var(--ddd);
-}
-button:active {
-	background: var(--ccc);
-}
+input[type=range]:hover { background: var(--border2); }
+input[type=text].val { width: 4.5em; text-align: right; font-family: var(--mono); }
+input[type=text].str { width: 14em; }
 textarea {
 	height: 8em;
-	width: 20em;
+	width: 100%;
+	max-width: 26em;
+	resize: vertical;
+	font-family: var(--mono);
+	font-size: 0.8rem;
 }
-progress {
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	appearance: none;
-	border: 1px solid var(--ccc);
-	border-radius: 4px;
-	background: var(--eee);
-	height: 8px;
-	width: 20em;
+select { cursor: pointer; }
+
+/* Buttons */
+button {
+	font-family: 'Rajdhani', sans-serif;
+	font-weight: 600;
+	font-size: 0.82rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	background: var(--bg3);
+	color: var(--text2);
+	border: 1px solid var(--border);
+	border-radius: 3px;
+	padding: 0.35em 0.9em;
+	cursor: pointer;
+	transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-::-webkit-progress-bar {
-	border-radius: 4px;
-	background: var(--eee);
+button:hover { background: var(--bg4); color: var(--text); border-color: var(--border2); }
+button:active { background: var(--border); }
+button.primary {
+	background: var(--accentbg);
+	color: var(--accent);
+	border-color: var(--accent);
 }
-::-webkit-progress-value {
-	border-radius: 4px;
-	background: var(--grn);
+button.primary:hover { background: var(--accentbg2); }
+button.danger {
+	background: var(--redbg);
+	color: var(--red);
+	border-color: var(--red);
 }
-::-moz-progress-bar {
-	border-radius: 2px;
-	background: var(--grn);
-}
-#menu {
-	border: 1px solid var(--ccc);
-	background: var(--eee);
-	overflow: hidden;
-}
-#menu button {
-	float: left;
+button.danger:hover { background: rgba(224,48,48,0.2); }
+
+/* ── DIVIDER ────────────────────────────────────────── */
+hr {
 	border: none;
-	padding: 0.8em;
+	border-top: 1px solid var(--border);
+	margin: 1.2em 0;
 }
-#menu button.active {
-	background: var(--sel);
-	color: var(--fff);
+.section-label {
+	font-family: 'Rajdhani', sans-serif;
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--accent);
+	margin-bottom: 0.6em;
 }
-#lang {
-	float: right;
-	margin: 0.2em;
-	font-size: 0.6em;
-}
-.tab {
-	border: 1px solid var(--ccc);
-	border-top: none;
-	overflow: hidden;
-	display: none;
-	padding: 0.8em;
-}
+
+/* ── SHOW TABLE (Settings tab) ──────────────────────── */
 .show {
-	width: 20em;
+	width: 100%;
+	border-collapse: collapse;
 }
-.show .min {
-	white-space: nowrap;
-	width: 1px;
-}
-.show label {
-	font-weight: bold;
-}
-.show .val {
-	text-align: right;
-	width: 3em;
-}
-.show .str {
-	text-align: left;
-	width: 12em;
-}
-.show .greyed {
-	color: var(--bbb);
-}
-.result {
-	font-weight: bold;
-	padding-left: 0.5em;
-}
-.hint {
-	font-size: 0.8em;
-}
+.show tr { border-bottom: 1px solid var(--border); }
+.show tr:last-child { border-bottom: none; }
+.show td { padding: 0.45em 0.5em; vertical-align: middle; }
+.show td:first-child { width: 11em; }
+.show td.min { white-space: nowrap; }
+.show .greyed { color: var(--text3); }
+.show .greyed input, .show .greyed select { color: var(--text3); }
+
+/* ── INFO BOX ───────────────────────────────────────── */
 #info {
-	font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
-	font-size: 0.9em;
-	line-height: 1.2em;
-	white-space: pre;
+	font-family: var(--mono);
+	font-size: 0.78rem;
+	color: var(--text2);
+	background: var(--bg3);
+	border: 1px solid var(--border);
+	border-left: 3px solid var(--accent);
+	padding: 0.6em 0.8em;
+	margin-bottom: 1em;
+	border-radius: 0 3px 3px 0;
 }
 #fwinfo {
+	font-family: var(--mono);
+	font-size: 0.8rem;
+	color: var(--text2);
 	white-space: nowrap;
 }
-#footer {
-	font-size: 0.6em;
-	text-align: right;
+
+/* ── THROTTLE SLIDER ────────────────────────────────── */
+.throt-wrap { margin-top: 0.8em; }
+
+/* ── RESULT ─────────────────────────────────────────── */
+.result {
+	font-family: 'Rajdhani', sans-serif;
+	font-weight: 600;
+	font-size: 0.82rem;
+	letter-spacing: 0.08em;
+	padding-left: 0.6em;
 }
+
+/* ── PROGRESS ───────────────────────────────────────── */
+progress {
+	-webkit-appearance: none; appearance: none;
+	width: 100%; max-width: 26em; height: 6px;
+	border: none;
+	border-radius: 3px;
+	background: var(--border);
+	display: block;
+	margin-top: 0.5em;
+}
+::-webkit-progress-bar { background: var(--border); border-radius: 3px; }
+::-webkit-progress-value { background: var(--accent); border-radius: 3px; }
+::-moz-progress-bar { background: var(--accent); border-radius: 3px; }
+
+/* ── FIRMWARE TABLE ─────────────────────────────────── */
+#firmware-wrap table { width: 100%; border-collapse: collapse; }
+#firmware-wrap table td { padding: 0.4em 0.5em; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
+#firmware-wrap table td:first-child { color: var(--text2); width: 8em; }
+
+/* ── eCOM TAB ───────────────────────────────────────── */
+#ecom-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.6em 1.5em;
+}
+@media (max-width: 560px) { #ecom-grid { grid-template-columns: 1fr; } }
+
+.ecom-row {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2em;
+	padding: 0.5em 0;
+	border-bottom: 1px solid var(--border);
+}
+.ecom-row-inner { display: flex; align-items: center; gap: 0.5em; }
+.ecom-key {
+	font-family: var(--mono);
+	font-size: 0.75rem;
+	color: var(--accent);
+	min-width: 5.5em;
+	flex-shrink: 0;
+}
+.ecom-hint {
+	font-size: 0.7rem;
+	color: var(--text3);
+	font-style: italic;
+	line-height: 1.3;
+}
+
+/* ── PRESET PANEL ───────────────────────────────────── */
+#preset-panel {
+	background: var(--bg3);
+	border: 1px solid var(--border);
+	border-radius: 3px;
+	padding: 0.9em 1em;
+	margin-bottom: 1.2em;
+}
+.preset-row { display: flex; flex-wrap: wrap; gap: 0.5em; align-items: center; margin-top: 0.4em; }
+.preset-row select { flex: 1; min-width: 10em; }
+.preset-tag {
+	display: inline-flex;
+	align-items: center;
+	background: var(--accentbg);
+	color: var(--accent);
+	border: 1px solid rgba(232,160,32,0.3);
+	border-radius: 2px;
+	font-family: var(--mono);
+	font-size: 0.72rem;
+	padding: 0.15em 0.5em;
+	gap: 0.3em;
+}
+
+/* Save-as dialog */
+#saveas-wrap { display: flex; gap: 0.5em; align-items: center; margin-top: 0.5em; flex-wrap: wrap; }
+#saveas-wrap input[type=text] { flex: 1; min-width: 12em; }
+
+/* ── WIFI TAB ───────────────────────────────────────── */
+.wifi-section {
+	background: var(--bg3);
+	border: 1px solid var(--border);
+	border-radius: 3px;
+	padding: 0.9em 1em;
+	margin-bottom: 1em;
+}
+.wifi-grid {
+	display: grid;
+	grid-template-columns: 7em 1fr;
+	gap: 0.5em 0.8em;
+	align-items: center;
+	margin: 0.6em 0;
+}
+.wifi-grid label { color: var(--text2); font-size: 0.85rem; }
+.wifi-grid input[type=text],
+.wifi-grid input[type=password] { width: 100%; }
+
+/* ── FOOTER ─────────────────────────────────────────── */
+#footer {
+	font-size: 0.65rem;
+	letter-spacing: 0.08em;
+	text-align: right;
+	color: var(--text3);
+	margin-top: 1.2em;
+}
+#footer a { color: var(--text3); text-decoration: none; }
+#footer a:hover { color: var(--accent); }
+
+/* ── HINT TEXT ──────────────────────────────────────── */
+.hint { font-size: 0.75rem; color: var(--text3); margin-top: 0.3em; }
+.hint b { font-family: var(--mono); color: var(--text2); font-weight: 500; }
+
+/* ── BADGE ──────────────────────────────────────────── */
+.badge {
+	display: inline-block;
+	background: var(--accentbg);
+	color: var(--accent2);
+	border: 1px solid rgba(232,160,32,0.3);
+	border-radius: 2px;
+	font-size: 0.68rem;
+	font-family: var(--mono);
+	padding: 0.05em 0.4em;
+	vertical-align: middle;
+	margin-left: 0.3em;
+}
+b.kbd {
+	border: 1px solid var(--border2);
+	border-radius: 2px;
+	background: var(--bg3);
+	color: var(--text);
+	padding: 0.1em 0.3em;
+	font-size: 0.78rem;
+}
+
+/* ── NOTIFICATION TOAST ─────────────────────────────── */
+#toast {
+	position: fixed;
+	bottom: 1.2rem; right: 1.2rem;
+	background: var(--bg4);
+	border: 1px solid var(--border);
+	border-left: 3px solid var(--accent);
+	color: var(--text);
+	font-size: 0.82rem;
+	padding: 0.6em 1em;
+	border-radius: 3px;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.3s;
+	z-index: 100;
+}
+#toast.show { opacity: 1; }
+#toast.error { border-left-color: var(--red); }
+#toast.success { border-left-color: var(--grn); }
+
+/* ── BUTTONS ROW ────────────────────────────────────── */
+.btn-row { display: flex; gap: 0.5em; flex-wrap: wrap; align-items: center; margin-top: 0.8em; }
 </style>
 </head>
 <body>
+
+<div id="header">
+	<span class="logo">AART</span>
+	<span class="subtitle">Remora&trade; Programmer</span>
+	<div class="spacer"></div>
+	<select id="lang" onchange="setlang(value)">@LANG_OPTS@</select>
+</div>
+
 <div id="main">
 	<div id="menu">
 		<button class="item" id="item1" data-lang="S00" onclick="opentab(1)"></button>
 		<button class="item" id="item2" data-lang="S01" onclick="opentab(2)"></button>
+		<button class="item" id="item5" onclick="opentab(5)">eCom</button>
 		<button class="item" id="item3" data-lang="S02" onclick="opentab(3)"></button>
-		<select id="lang" onchange="setlang(value)">@LANG_OPTS@</select>
+		<button class="item" id="item4" onclick="opentab(4)">Wi-Fi</button>
 	</div>
-	<div class="tab" id="tab1off" data-lang="S03"></div>
+
+	<!-- TAB 1: Settings -->
+	<div class="tab loading-state" id="tab1off" data-lang="S03"></div>
 	<div class="tab" id="tab1on">
 		<table class="show" id="show"></table>
-		<p>
-			<button data-lang="B00" onclick="savecfg()"></button>
+		<div class="btn-row">
+			<button class="primary" data-lang="B00" onclick="savecfg()"></button>
 			<button data-lang="B01" onclick="resetcfg()"></button>
 			<span class="result" id="result1"></span>
-		</p>
+		</div>
 		<hr>
 		<div id="info"></div>
-		<input type="range" min="0" max="2000" value="0" id="throt" oninput="setthrot(value)">
-		<div class="hint" data-lang="H00"></div>
+		<div class="throt-wrap">
+			<input type="range" min="0" max="2000" value="0" id="throt" oninput="setthrot(value)">
+			<div class="hint" data-lang="H00"></div>
+		</div>
 	</div>
-	<div class="tab" id="tab2off" data-lang="S04"></div>
+
+	<!-- TAB 2: Music -->
+	<div class="tab loading-state" id="tab2off" data-lang="S04"></div>
 	<div class="tab" id="tab2on">
 		<textarea id="music" maxlength="500"></textarea>
 		<div class="hint" data-lang="H01"></div>
-		<input type="range" min="0" max="100" id="volume" oninput="setvolume(value)">
-		<div class="hint">
-			<span data-lang="S06"></span>
-			<span id="volval"></span>
+		<div style="margin-top:0.8em">
+			<input type="range" min="0" max="100" id="volume" oninput="setvolume(value)">
+			<div class="hint"><span data-lang="S06"></span>: <span id="volval"></span></div>
 		</div>
-		<p>
-			<button data-lang="B02" onclick="playmusic()"></button>
+		<div class="btn-row">
+			<button class="primary" data-lang="B02" onclick="playmusic()"></button>
 			<button data-lang="B00" onclick="savemusic()"></button>
 			<button data-lang="B03" onclick="clearmusic()"></button>
 			<span class="result" id="result2"></span>
-		</p>
+		</div>
 		<hr>
 		<div class="hint" data-lang="H02"></div>
 	</div>
-	<div class="tab" id="tab3off">
-		<div data-lang="S05"></div>
-		<div class="hint" data-lang="H03"></div>
+
+	<!-- TAB 3: Firmware -->
+	<div class="tab loading-state" id="tab3off">
+		<span data-lang="S05"></span>
+		<span class="hint" style="display:inline" data-lang="H03"></span>
 	</div>
 	<div class="tab" id="tab3on">
-		<table>
-			<tr><td><label for="image" data-lang="S07"></label></td><td><input type="file" id="image" accept=".bin"></td></tr>
-			<tr><td><label for="boot" data-lang="S08"></label></td><td>
-				<select id="boot">
-					<option value="0" data-lang="I02"></option>
-					<option value="1" data-lang="I01"></option>
-				</select>
-			</td></tr>
-			<tr><td><label for="wrp" data-lang="S09"></label></td><td>
-				<select id="wrp">
-					<option value="0">--</option>
-					<option value="0x33" data-lang="I00"></option>
-					<option value="0x44" data-lang="I01"></option>
-					<option value="0x55" data-lang="I03"></option>
-				</select>
-				<button onclick="setwrp()" data-lang="B04"></button>
-				<span class="result" id="result3"></span>
-			</td></tr>
-			<tr><td><label for="force" data-lang="S10"></label></td><td>
-				<input type="checkbox" id="force">
-				<span class="hint" data-lang="H04"></span>
-			</td></tr>
-		</table>
-		<p>
-			<button id="update" onclick="update()" data-lang="B05"></button>
+		<div id="firmware-wrap">
+			<table>
+				<tr><td data-lang="S07"></td><td><input type="file" id="image" accept=".bin"></td></tr>
+				<tr><td data-lang="S08"></td><td>
+					<select id="boot">
+						<option value="0" data-lang="I02"></option>
+						<option value="1" data-lang="I01"></option>
+					</select>
+				</td></tr>
+				<tr><td data-lang="S09"></td><td>
+					<select id="wrp">
+						<option value="0">--</option>
+						<option value="0x33" data-lang="I00"></option>
+						<option value="0x44" data-lang="I01"></option>
+						<option value="0x55" data-lang="I03"></option>
+					</select>
+					<button onclick="setwrp()" data-lang="B04" style="margin-left:0.4em"></button>
+					<span class="result" id="result3"></span>
+				</td></tr>
+				<tr><td data-lang="S10"></td><td>
+					<input type="checkbox" id="force">
+					<span class="hint" style="display:inline" data-lang="H04"></span>
+				</td></tr>
+			</table>
+		</div>
+		<div class="btn-row">
+			<button id="update" class="primary" onclick="update()" data-lang="B05"></button>
 			<span class="result" id="result4"></span>
-		</p>
+		</div>
 		<progress id="status" value="0" max="100"></progress>
 		<hr>
 		<div id="fwinfo"></div>
 	</div>
-	<div id="footer">ESCape32 Wi-Fi Link @PROJECT_VER@ (escape32.org)</div>
-</div>
-<script>
-const bitvals = {};
 
+	<!-- TAB 4: Wi-Fi -->
+	<div class="tab loading-state" id="tab4off" data-lang="S04"></div>
+	<div class="tab" id="tab4on">
+		<div class="section-label">Access Point Identity</div>
+		<div class="wifi-section">
+			<div class="wifi-grid">
+				<label for="wifi-ssid">SSID</label>
+				<input type="text" id="wifi-ssid" maxlength="32" placeholder="ESCape32-WiFi-Link">
+				<label for="wifi-pass">Password</label>
+				<input type="password" id="wifi-pass" maxlength="64" placeholder="(open — no password)">
+			</div>
+			<div class="hint" style="margin-bottom:0.6em">Changes take effect after the device is power-cycled.</div>
+			<div class="btn-row">
+				<button class="primary" onclick="saveWifi()">Save Wi-Fi</button>
+				<button class="danger" onclick="resetWifi()">Reset to Default</button>
+				<span class="result" id="result-wifi"></span>
+			</div>
+		</div>
+		<div class="hint">
+			Default SSID: <span class="badge">ESCape32-WiFi-Link</span> &nbsp; Default password: none (open).
+		</div>
+	</div>
+
+	<!-- TAB 5: eCom -->
+	<div class="tab loading-state" id="tab5off" data-lang="S03"></div>
+	<div class="tab" id="tab5on">
+
+		<!-- Preset loader -->
+		<div class="section-label">Motor Presets</div>
+		<div id="preset-panel">
+			<div class="hint" style="margin-bottom:0.5em">Load factory defaults for a known motor spec, or save/export your current values.</div>
+			<div class="preset-row">
+				<select id="preset-select">
+					<option value="">— select preset —</option>
+					<option value="2000kv_9n12p">2,000Kv 9N12P</option>
+					<option value="3500kv_9n12p">3,500Kv 9N12P</option>
+					<option value="4500kv_9n12p">4,500Kv 9N12P</option>
+					<option value="6000kv_9n12p">6,000Kv 9N12P</option>
+					<option value="6200kv_9n12p">6,200Kv 9N12P</option>
+					<option value="11000kv_9n12p">11,000Kv 9N12P</option>
+					<option value="13000kv_9n12p">13,000Kv 9N12P</option>
+					<option value="15000kv_9n12p">15,000Kv 9N12P</option>
+					<option value="22000kv_9n6p">22,000Kv 9N6P</option>
+				</select>
+				<button class="primary" onclick="loadPreset()">Load Preset</button>
+			</div>
+			<hr style="margin:0.7em 0">
+			<div class="section-label" style="margin-bottom:0.3em">Save / Export</div>
+			<div id="saveas-wrap">
+				<input type="text" id="preset-name" placeholder="Preset name (e.g. My 6200Kv)" maxlength="48">
+				<button onclick="savePresetToFlash()">Save to Device</button>
+				<button onclick="exportPreset()">⬇ Export JSON</button>
+			</div>
+			<div id="saved-presets-row" class="preset-row" style="margin-top:0.5em"></div>
+		</div>
+
+		<!-- Essential parameters grid -->
+		<div class="section-label">Essential eCom Parameters</div>
+		<div id="ecom-grid">
+			<!-- rows injected by JS -->
+		</div>
+		<div class="btn-row" style="margin-top:1em">
+			<button class="primary" data-lang="B00" onclick="saveEcom()"></button>
+			<button data-lang="B01" onclick="resetEcom()"></button>
+			<span class="result" id="result5"></span>
+		</div>
+	</div>
+
+	<div id="footer">AART Remora&trade; Programmer &nbsp;·&nbsp; <a href="https://aart.dev" target="_blank">aart.dev</a> &nbsp;·&nbsp; ESCape32 @PROJECT_VER@</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ─────────────────────────────────────────────────────
+   BITFIELD helpers (unchanged from original)
+───────────────────────────────────────────────────── */
+const bitvals = {};
 function bitfield(n) {
 	return (key, val) => {
 		const res = [];
@@ -292,13 +624,15 @@ function bitfield(n) {
 		}
 		bitvals[key] = val;
 		return res.join('');
-	}
+	};
 }
-
 function setbit(key, bit, on) {
 	setparam(key, (on ? bitvals[key] | bit : bitvals[key] & ~bit).toString());
 }
 
+/* ─────────────────────────────────────────────────────
+   PARAMS definitions (unchanged)
+───────────────────────────────────────────────────── */
 const params = {
 	arm: false,
 	damp: false,
@@ -318,22 +652,48 @@ const params = {
 };
 
 const deps = [
-	{ // Disable if checked
-		arm: ['throt_set'],
-		brushed: ['timing', 'sine_range', 'sine_power', 'freq_min', 'duty_spup', 'duty_ramp', 'duty_lock', 'throt_ztc', 'prot_stall'],
-	},
-	{ // Enable if checked
-		damp: ['sine_range', 'sine_power', 'duty_lock'],
-	},
+	{ arm: ['throt_set'], brushed: ['timing', 'sine_range', 'sine_power', 'freq_min', 'duty_spup', 'duty_ramp', 'duty_lock', 'throt_ztc', 'prot_stall'] },
+	{ damp: ['sine_range', 'sine_power', 'duty_lock'] },
 ];
 
-let strs, ws, bn, bi, ival, timer, target, throtval, delayed, blocked, tabnum, tabvis = {};
+/* ─────────────────────────────────────────────────────
+   eCom parameter definitions
+───────────────────────────────────────────────────── */
+const ecomKeys = [
+	{ key: 'damp',       label: 'damp',       type: 'bool',   hint: 'Complementary PWM. Enable unless duty_min/max < 100%.' },
+	{ key: 'revdir',     label: 'revdir',     type: 'bool',   hint: 'Reverse motor direction (swap any two phase wires instead).' },
+	{ key: 'timing',     label: 'timing',     type: 'num',    min:0, max:31,  hint: 'Motor advance timing. High = faster no-load, more current.' },
+	{ key: 'freq_min',   label: 'freq_min',   type: 'num',    min:16, max:96, hint: 'Min PWM kHz. Low = lower losses; high Kv may need 48+.' },
+	{ key: 'freq_max',   label: 'freq_max',   type: 'num',    min:16, max:96, hint: 'Max PWM kHz. Matches freq_min for fixed frequency.' },
+	{ key: 'duty_min',   label: 'duty_min',   type: 'num',    min:0, max:100, hint: 'Min throttle power %. 100 = full; reduce to limit voltage.' },
+	{ key: 'duty_max',   label: 'duty_max',   type: 'num',    min:0, max:100, hint: 'Max throttle power %. 100 = full rail voltage.' },
+	{ key: 'duty_spup',  label: 'duty_spup',  type: 'num',    min:0, max:100, hint: 'Max spin-up power %. Limits inrush at startup.' },
+	{ key: 'duty_ramp',  label: 'duty_ramp',  type: 'num',    min:0, max:100, hint: 'Max power @ kERPM ramp threshold.' },
+	{ key: 'duty_rate',  label: 'duty_rate',  type: 'num',    min:1, max:100, hint: 'Duty cycle slew rate. Lower = softer start.' },
+	{ key: 'analog_min', label: 'analog_min', type: 'num',    min:0, max:2000,hint: 'Analog input min setpoint. Normally 0.' },
+	{ key: 'analog_max', label: 'analog_max', type: 'num',    min:0, max:2000,hint: 'Analog input max setpoint. Normally 1440.' },
+];
 
+/* ─────────────────────────────────────────────────────
+   Toast helper
+───────────────────────────────────────────────────── */
+let toastTimer;
+function showToast(msg, type='') {
+	const el = document.getElementById('toast');
+	el.textContent = msg;
+	el.className = 'show ' + type;
+	clearTimeout(toastTimer);
+	toastTimer = setTimeout(() => el.className = '', 3000);
+}
+
+/* ─────────────────────────────────────────────────────
+   Language
+───────────────────────────────────────────────────── */
+let strs = {};
 async function fetchlang(lang) {
 	const data = await fetch(`?${lang}`);
 	return data.json();
 }
-
 async function setlang(lang) {
 	try {
 		strs = await fetchlang(lang);
@@ -344,25 +704,29 @@ async function setlang(lang) {
 			elem.innerHTML = strs[key] || '';
 		});
 	} catch (err) {
-		if (lang == 'en') throw err;
-		setlang('en');
+		if (lang != 'en') setlang('en');
+		// silently fall through if 'en' also unavailable (offline preview)
 	}
 }
 
+/* ─────────────────────────────────────────────────────
+   WebSocket
+───────────────────────────────────────────────────── */
+let ws, bn, bi, ival, timer, target, throtval, delayed, blocked, tabnum, tabvis = {};
+
 function send(cmd) {
-	if (ws.readyState != ws.OPEN) return;
-	ws.send(cmd);
+	if (ws && ws.readyState == ws.OPEN) ws.send(cmd);
 }
 
 function clearresults() {
 	clearInterval(bi);
-	const elems = document.getElementsByClassName('result');
-	for (let i = 0; i < elems.length; ++i) elems[i].style.display = 'none';
+	document.querySelectorAll('.result').forEach(e => e.style.display = 'none');
 }
 
 function setresult(n, ok, key, cnt) {
 	clearresults();
 	const elem = document.getElementById('result' + n);
+	if (!elem) return;
 	const style = elem.style;
 	style.display = 'none';
 	style.color = ok ? 'var(--grn)' : 'var(--red)';
@@ -385,34 +749,36 @@ function opentab(n) {
 	tabnum = n;
 	tabvis = {};
 	clearresults();
-	const items = document.getElementsByClassName('item');
-	const tabs = document.getElementsByClassName('tab');
-	for (let i = 0; i < items.length; ++i) items[i].className = 'item';
-	for (let i = 0; i < tabs.length; ++i) tabs[i].style.display = 'none';
+	document.querySelectorAll('.item').forEach(el => el.className = 'item');
+	document.querySelectorAll('.tab').forEach(el => el.style.display = 'none');
 	document.getElementById('item' + n).className = 'item active';
-	document.getElementById('tab' + n + 'off').style.display = 'block';
-	if (!ws || ws.readyState != ws.OPEN) {
-		connect();
-		return;
-	}
+	const offEl = document.getElementById('tab' + n + 'off');
+	offEl.style.display = 'flex';
+	if (!ws || ws.readyState != ws.OPEN) { connect(); return; }
 	clearInterval(ival);
 	clearTimeout(timer);
 	switch (n) {
 		case 1:
-			if (delayed) {
-				timer = setTimeout(() => {delayed = null, opentab(1)}, 2000);
-				break;
-			}
-			ival = setInterval(() => {send('info\n')}, 500);
+			if (delayed) { timer = setTimeout(() => { delayed = null; opentab(1); }, 2000); break; }
+			ival = setInterval(() => { send('info\n'); }, 500);
 			send('info\n');
 			send('show\n');
 			resettimer(1);
 			break;
 		case 3:
-			ival = setInterval(() => {blocked || send('_probe\n')}, 300);
+			ival = setInterval(() => { blocked || send('_probe\n'); }, 300);
 			send('_probe\n');
 			resettimer(3);
 			delayed = true;
+			break;
+		case 4:
+			loadWifiConfig();
+			showtab(4);
+			break;
+		case 5:
+			if (delayed) { timer = setTimeout(() => { delayed = null; opentab(5); }, 2000); break; }
+			send('show\n');
+			resettimer(5);
 			break;
 		default:
 			showtab(n);
@@ -423,16 +789,20 @@ function opentab(n) {
 function showtab(n) {
 	if (!n) n = tabnum;
 	else if (n != tabnum) return;
-	document.getElementById('tab' + n + 'off').style.display = 'none';
-	document.getElementById('tab' + n + 'on').style.display = 'block';
+	const off = document.getElementById('tab' + n + 'off');
+	const on  = document.getElementById('tab' + n + 'on');
+	if (off) off.style.display = 'none';
+	if (on)  on.style.display  = 'block';
 	tabvis[n] = true;
 }
 
 function hidetab(n) {
 	if (!n) n = tabnum;
 	else if (n != tabnum) return;
-	document.getElementById('tab' + n + 'off').style.display = 'block';
-	document.getElementById('tab' + n + 'on').style.display = 'none';
+	const off = document.getElementById('tab' + n + 'off');
+	const on  = document.getElementById('tab' + n + 'on');
+	if (off) off.style.display = 'flex';
+	if (on)  on.style.display  = 'none';
 	tabvis[n] = null;
 }
 
@@ -440,15 +810,15 @@ function resettimer(n) {
 	if (n && n != tabnum) return;
 	clearTimeout(timer);
 	timer = setTimeout(() => {
-		ws.onopen = null;
-		ws.onmessage = null;
-		ws.onclose = null;
-		ws.close();
+		if (ws) { ws.onopen = ws.onmessage = ws.onclose = null; ws.close(); }
 		hidetab();
 		connect();
 	}, 2000);
 }
 
+/* ─────────────────────────────────────────────────────
+   Field rendering (unchanged from original)
+───────────────────────────────────────────────────── */
 function getfield(key, val) {
 	const data = params[key];
 	switch (typeof data) {
@@ -456,16 +826,16 @@ function getfield(key, val) {
 			return `<input type="checkbox" id="field_${key}"${val != 0 ? ' checked' : ''} onchange="setparam('${key}', checked ? '1' : '0')">`;
 		case 'string':
 			return `<input type="text" maxlength="200" id="field_${key}" value="${val}" class="str" onchange="setparam('${key}', value)">`;
-		case 'object':
+		case 'object': {
 			const res = [];
 			res.push(`<select id="field_${key}" onchange="setparam('${key}', value)">`);
 			for (let i = 0; i < data.length; ++i) {
-				const key = data[i];
-				const str = strs[key];
-				res.push(`<option value="${i}"${str ? ` data-lang="${key}"`: ''}"${val == i ? ' selected' : ''}>${str || key}</option>`);
+				const k = data[i], s = strs[k];
+				res.push(`<option value="${i}"${s ? ` data-lang="${k}"` : ''}${val == i ? ' selected' : ''}>${s || k}</option>`);
 			}
 			res.push('</select>');
 			return res.join('');
+		}
 		case 'function':
 			return data(key, val);
 		default:
@@ -478,7 +848,7 @@ function geterror(res) {
 		case '0':  return 'S14';
 		case '1':  return 'S15';
 		case '-1': return 'S16';
-		default:   return `${strs['S17']} ${res}`;
+		default:   return `${strs['S17'] || 'Error'} ${res}`;
 	}
 }
 
@@ -486,23 +856,68 @@ function checkdeps() {
 	const res = {};
 	for (let i = 0; i < 2; ++i) {
 		const map = deps[i];
-		for (key in map) {
+		for (const key in map) {
 			const elem = document.getElementById('field_' + key);
-			if (elem) map[key].forEach(key => {res[key] |= i ^ elem.checked});
+			if (elem) map[key].forEach(k => { res[k] |= i ^ elem.checked; });
 		}
 	}
-	for (key in res) {
+	for (const key in res) {
 		const elem = document.getElementById('field_' + key);
-		if (elem) document.getElementById('label_' + key).className = (elem.disabled = res[key]) ? 'greyed' : '';
+		if (elem) {
+			const lbl = document.getElementById('label_' + key);
+			if (lbl) lbl.className = (elem.disabled = res[key]) ? 'greyed' : '';
+		}
 	}
 }
 
-function handler1(data, key, val) { // 'get', 'set'
-	if (!data) {
-		if (!val) return;
-		send(`get ${key}\n`);
-		return;
-	}
+/* ─────────────────────────────────────────────────────
+   eCom tab: build grid & value management
+───────────────────────────────────────────────────── */
+const ecomVals = {}; // live values from firmware
+
+function buildEcomGrid() {
+	const grid = document.getElementById('ecom-grid');
+	const rows = ecomKeys.map(p => {
+		const inputHtml = p.type === 'bool'
+			? `<input type="checkbox" id="ecom_${p.key}" onchange="ecomSetBool('${p.key}', this.checked)">`
+			: `<input type="text" class="val" id="ecom_${p.key}" maxlength="6" value="${ecomVals[p.key] ?? ''}" onchange="ecomSetNum('${p.key}', this.value)">`;
+		return `<div class="ecom-row">
+			<div class="ecom-row-inner">
+				<span class="ecom-key">${p.key}</span>
+				${inputHtml}
+			</div>
+			<div class="ecom-hint">${p.hint}</div>
+		</div>`;
+	});
+	grid.innerHTML = rows.join('');
+	// Restore values
+	ecomKeys.forEach(p => {
+		const el = document.getElementById('ecom_' + p.key);
+		if (!el) return;
+		if (p.type === 'bool') el.checked = (ecomVals[p.key] ?? 0) != 0;
+		else el.value = ecomVals[p.key] ?? '';
+	});
+}
+
+function ecomSetBool(key, checked) { setparam(key, checked ? '1' : '0'); }
+function ecomSetNum(key, val) { setparam(key, val.trim()); }
+
+function saveEcom() {
+	ecomKeys.forEach(p => {
+		const el = document.getElementById('ecom_' + p.key);
+		if (!el) return;
+		const val = p.type === 'bool' ? (el.checked ? '1' : '0') : el.value.trim();
+		setparam(p.key, val);
+	});
+	send('save\n');
+}
+function resetEcom() { send('reset\n'); send('show\n'); }
+
+/* ─────────────────────────────────────────────────────
+   WS message handlers
+───────────────────────────────────────────────────── */
+function handler1(data, key, val) {
+	if (!data) { if (!val) return; send(`get ${key}\n`); return; }
 	[key, val] = data[0].split(': ');
 	if (key in bitvals) {
 		const elems = document.getElementsByClassName('field_' + key);
@@ -511,16 +926,21 @@ function handler1(data, key, val) { // 'get', 'set'
 		return;
 	}
 	const elem = document.getElementById('field_' + key);
-	if (elem.type != 'checkbox') {
-		elem.value = val;
-		return;
+	if (elem) {
+		if (elem.type != 'checkbox') elem.value = val;
+		else { elem.checked = val != 0; checkdeps(); }
 	}
-	elem.checked = val != 0;
-	checkdeps();
+	// Mirror into eCom
+	ecomVals[key] = val;
+	const eEl = document.getElementById('ecom_' + key);
+	if (eEl) {
+		if (eEl.type == 'checkbox') eEl.checked = val != 0;
+		else eEl.value = val;
+	}
 }
 
-function handler2(ok) { // 'save', 'reset'
-	setresult(tabnum, ok, ok ? 'S18' : 'S19', 3);
+function handler2(ok) {
+	setresult(tabnum == 5 ? 5 : tabnum, ok, ok ? 'S18' : 'S19', 3);
 	send('show\n');
 }
 
@@ -535,14 +955,18 @@ const handlers = {
 		const res = [];
 		for (let i = 0; i < data.length; ++i) {
 			const [key, val] = data[i].split(': ');
+			ecomVals[key] = val;
 			res.push('<tr>');
-			res.push(`<td><label for="field_${key}" id="label_${key}">${key}</label></td>`);
-			res.push(`<td class="min">${getfield(key, val)} <span class="hint" data-lang="${key}">${strs[key] || ''}</span></td>`);
+			res.push(`<td><label for="field_${key}" id="label_${key}" class="field-label">${key}</label></td>`);
+			res.push(`<td class="min">${getfield(key, val)} <span class="hint field-hint" data-lang="${key}">${strs[key] || ''}</span></td>`);
 			res.push('</tr>');
 		}
 		document.getElementById('show').innerHTML = res.join('');
 		checkdeps();
-		showtab(1);
+		if (tabnum == 1) showtab(1);
+		// Build eCom grid whenever we get fresh data
+		buildEcomGrid();
+		if (tabnum == 5) showtab(5);
 	},
 	get: handler1,
 	set: handler1,
@@ -560,14 +984,14 @@ const handlers = {
 	},
 	_info: (data) => {
 		if (!data) return;
-		const res = [];
 		const pins = ['PA2', 'PA6', 'PB4'];
 		const [rev, pin, mcu] = data[0].split(' ');
 		target = data[1] && data[2];
-		res.push(`<span data-lang="S11">${strs['S11']}</span> ${rev}` + (pin != 0 ? ` [IO:${pins[pin - 1] || pin}, MCU:${mcu}]` : ''));
-		res.push(target ? `<span data-lang="S12">${strs['S12']}</span> ${data[1]} [${data[2]}]` : `<span data-lang="S13">${strs['S13']}</span>`);
+		const r = [];
+		r.push(`<span data-lang="S11">${strs['S11'] || 'Bootloader'}</span> ${rev}` + (pin != 0 ? ` [IO:${pins[pin-1]||pin}, MCU:${mcu}]` : ''));
+		r.push(target ? `<span data-lang="S12">${strs['S12'] || 'Firmware'}</span> ${data[1]} [${data[2]}]` : `<span data-lang="S13">${strs['S13'] || 'Not installed'}</span>`);
 		document.getElementById('status').value = 0;
-		document.getElementById('fwinfo').innerHTML = res.join('<br>');
+		document.getElementById('fwinfo').innerHTML = r.join('<br>');
 		showtab(3);
 	},
 	_setwrp: (ok) => {
@@ -575,10 +999,7 @@ const handlers = {
 		if (ok) document.getElementById('wrp').value = 0;
 	},
 	_update: (ok) => {
-		if (!ok) {
-			setresult(4, null, 'S20', 3);
-			return;
-		}
+		if (!ok) { setresult(4, null, 'S20', 3); return; }
 		setresult(4, true, 'S21', 0);
 		blocked = true;
 	},
@@ -596,82 +1017,71 @@ const handlers = {
 		document.getElementById('wrp').value = 0;
 		document.getElementById('force').checked = false;
 	},
+	_wifi_get: (data) => {
+		if (!data || !data[0]) return;
+		const parts = data[0].split('\t');
+		document.getElementById('wifi-ssid').value = parts[0] || '';
+		document.getElementById('wifi-pass').value = parts[1] || '';
+	},
+	_wifi_set: (ok) => {
+		setresult('-wifi', ok, ok ? 'S18' : 'S19', 3);
+		showToast(ok ? 'Wi-Fi settings saved — power-cycle to apply.' : 'Failed to save Wi-Fi settings.', ok ? 'success' : 'error');
+	},
 };
 
+/* ─────────────────────────────────────────────────────
+   Connect
+───────────────────────────────────────────────────── */
 function connect() {
 	resettimer();
-	ws = new WebSocket('ws://192.168.4.1/ws');
-	ws.onopen = () => {
-		throtval = null;
-		blocked = null;
-		opentab();
-	}
+	try { ws = new WebSocket('ws://192.168.4.1/ws'); } catch(e) { return; }
+	ws.onopen = () => { throtval = null; blocked = null; opentab(); };
 	ws.onmessage = (msg) => {
 		const data = msg.data.split('\n');
 		const args = data.shift().split(' ');
 		const cmd = args.shift();
-		data.pop(); // Pop empty string
-		handlers[cmd](data.length && data.pop() == 'OK' ? data : null, ...args);
-	}
-	ws.onclose = () => {
-		hidetab();
-		resettimer();
-	}
+		data.pop(); // Pop trailing empty string from final \n
+		if (handlers[cmd]) handlers[cmd](data.length && data.pop() == 'OK' ? data : null, ...args);
+	};
+	ws.onclose = () => { hidetab(); resettimer(); };
 }
 
+/* ─────────────────────────────────────────────────────
+   Core param helpers
+───────────────────────────────────────────────────── */
 function setparam(key, val) {
 	val = val.replace(/\s+/g, '');
 	if (val.length) send(`set ${key} ${val}\n`);
 	else send(`get ${key}\n`);
 }
-
 function setthrot(val) {
 	if (throtval == null) send(`throt ${val}\n`);
 	throtval = val;
 }
-
 function setvolume(val) {
 	document.getElementById('volume').value = val;
 	document.getElementById('volval').innerHTML = `${val}%`;
 }
-
-function savecfg() {
-	send('save\n');
-}
-
-function resetcfg() {
-	send('reset\n');
-}
+function savecfg() { send('save\n'); }
+function resetcfg() { send('reset\n'); }
 
 function parsemusic() {
 	const data = document.getElementById('music').value.replace(/\s+/g, '');
 	const chunks = data.split(':');
-	if (chunks.length != 3) return data; // Not in RTTTL format
+	if (chunks.length != 3) return data;
 	let defdur = 16, defoct = 4, defbpm = 120;
 	chunks[1].split(',').forEach(item => {
 		const [key, val] = item.split('=');
 		switch (key) {
-			case 'd':
-				defdur = Math.min(Math.max(parseInt(val), 1), 32);
-				break;
-			case 'o':
-				defoct = Math.min(Math.max(parseInt(val), 4), 7);
-				break;
-			case 'b':
-				defbpm = Math.min(Math.max(parseInt(val), 20), 999);
-				break;
-			default:
-				console.warn(`Discarding invalid option '${key}'`);
-				break;
+			case 'd': defdur = Math.min(Math.max(parseInt(val), 1), 32); break;
+			case 'o': defoct = Math.min(Math.max(parseInt(val), 4), 7); break;
+			case 'b': defbpm = Math.min(Math.max(parseInt(val), 20), 999); break;
 		}
 	});
 	let maxdur = 1, minoct = 7;
 	const notes = chunks[2].split(',').map(item => {
 		const parts = item.match(/^(1|2|4|8|16|32)?((?:[a-g]|h|p)#?)(\.?)(4|5|6|7)?$/);
-		if (!parts) {
-			console.warn(`Discarding invalid note '${item}'`);
-			return [];
-		}
+		if (!parts) return [];
 		let note = parts[2];
 		if (note === 'h') note = 'b';
 		else if (note == 'p') note = '_';
@@ -683,15 +1093,8 @@ function parsemusic() {
 		return [note, dot, dur, oct];
 	});
 	let durofs = 0, curoct = 4;
-	if (maxdur == 32) {
-		defbpm <<= 1;
-		maxdur >>= 1;
-		--durofs;
-	} else while (defbpm >= 20 && maxdur < 16) {
-		defbpm >>= 1;
-		maxdur <<= 1;
-		++durofs;
-	}
+	if (maxdur == 32) { defbpm <<= 1; maxdur >>= 1; --durofs; }
+	else while (defbpm >= 20 && maxdur < 16) { defbpm >>= 1; maxdur <<= 1; ++durofs; }
 	defbpm <<= 1;
 	if (defbpm > 999) defbpm = 999;
 	const octofs = minoct - 4;
@@ -705,13 +1108,8 @@ function parsemusic() {
 		if (dot) dur += dur >> 1;
 		oct -= octofs;
 		if (oct > 6) oct = 6;
-		if (oct > curoct + 1) {
-			++curoct;
-			res.push('+');
-		} else if (oct < curoct) {
-			--curoct;
-			res.push('-');
-		}
+		if (oct > curoct + 1) { ++curoct; res.push('+'); }
+		else if (oct < curoct) { --curoct; res.push('-'); }
 		if (oct > curoct) note = note.toUpperCase();
 		res.push(note);
 		if (dur > 1) res.push(dur);
@@ -725,7 +1123,6 @@ function playmusic() {
 	if (!music || volume == 0) return;
 	send(`play ${music} ${volume}\n`);
 }
-
 function savemusic() {
 	const music = parsemusic();
 	const volume = document.getElementById('volume').value;
@@ -734,7 +1131,6 @@ function savemusic() {
 	setparam('volume', volume);
 	savecfg();
 }
-
 function clearmusic() {
 	document.getElementById('music').value = '';
 	setvolume(25);
@@ -750,16 +1146,13 @@ function setwrp() {
 function update() {
 	if (blocked) return;
 	const file = document.getElementById('image').files[0];
-	if (!file) {
-		setresult(4, null, 'S23', 3);
-		return;
-	}
+	if (!file) { setresult(4, null, 'S23', 3); return; }
 	const fr = new FileReader();
 	fr.onload = () => {
 		const data = fr.result;
 		const size = data.byteLength;
 		const boot = document.getElementById('boot').value;
-		const wrp = document.getElementById('wrp').value;
+		const wrp  = document.getElementById('wrp').value;
 		const force = document.getElementById('force').checked;
 		try {
 			if (!size) throw 'S24';
@@ -779,12 +1172,144 @@ function update() {
 			if (typeof err != 'string') throw err;
 			setresult(4, null, err, 3);
 		}
-	}
+	};
 	fr.readAsArrayBuffer(file);
 }
 
+/* ─────────────────────────────────────────────────────
+   Wi-Fi tab
+───────────────────────────────────────────────────── */
+function loadWifiConfig() {
+	send('_wifi_get\n');
+}
+function saveWifi() {
+	const ssid = document.getElementById('wifi-ssid').value.trim();
+	const pass = document.getElementById('wifi-pass').value;
+	if (!ssid) { showToast('SSID cannot be empty.', 'error'); return; }
+	send(`_wifi_set ${ssid}\t${pass}\n`);
+}
+function resetWifi() {
+	document.getElementById('wifi-ssid').value = 'ESCape32-WiFi-Link';
+	document.getElementById('wifi-pass').value = '';
+	send('_wifi_set ESCape32-WiFi-Link\t\n');
+}
+
+/* ─────────────────────────────────────────────────────
+   Preset management
+───────────────────────────────────────────────────── */
+
+// Factory presets — values tuned per motor spec
+const factoryPresets = {
+	'2000kv_9n12p':  { damp:1, revdir:0, timing:8,  freq_min:24, freq_max:24, duty_min:100, duty_max:100, duty_spup:15, duty_ramp:35, duty_rate:20, analog_min:0, analog_max:1440 },
+	'3500kv_9n12p':  { damp:1, revdir:0, timing:10, freq_min:24, freq_max:48, duty_min:100, duty_max:100, duty_spup:20, duty_ramp:40, duty_rate:25, analog_min:0, analog_max:1440 },
+	'4500kv_9n12p':  { damp:1, revdir:0, timing:12, freq_min:24, freq_max:48, duty_min:100, duty_max:100, duty_spup:25, duty_ramp:45, duty_rate:30, analog_min:0, analog_max:1440 },
+	'6000kv_9n12p':  { damp:1, revdir:0, timing:14, freq_min:48, freq_max:48, duty_min:100, duty_max:100, duty_spup:30, duty_ramp:50, duty_rate:35, analog_min:0, analog_max:1440 },
+	'6200kv_9n12p':  { damp:1, revdir:0, timing:14, freq_min:48, freq_max:48, duty_min:100, duty_max:100, duty_spup:30, duty_ramp:50, duty_rate:35, analog_min:0, analog_max:1440 },
+	'11000kv_9n12p': { damp:1, revdir:0, timing:18, freq_min:48, freq_max:96, duty_min:100, duty_max:100, duty_spup:40, duty_ramp:60, duty_rate:50, analog_min:0, analog_max:1440 },
+	'13000kv_9n12p': { damp:1, revdir:0, timing:20, freq_min:48, freq_max:96, duty_min:100, duty_max:100, duty_spup:45, duty_ramp:65, duty_rate:55, analog_min:0, analog_max:1440 },
+	'15000kv_9n12p': { damp:1, revdir:0, timing:22, freq_min:48, freq_max:96, duty_min:100, duty_max:100, duty_spup:50, duty_ramp:70, duty_rate:60, analog_min:0, analog_max:1440 },
+	'22000kv_9n6p':  { damp:1, revdir:0, timing:26, freq_min:96, freq_max:96, duty_min:100, duty_max:100, duty_spup:60, duty_ramp:80, duty_rate:75, analog_min:0, analog_max:1440 },
+};
+
+async function loadPreset() {
+	const sel = document.getElementById('preset-select').value;
+	if (!sel) { showToast('Select a preset first.', 'error'); return; }
+
+	// Try fetching from device first, fallback to built-in
+	let preset;
+	try {
+		const resp = await fetch(`/preset/${sel}.json`);
+		if (resp.ok) preset = await resp.json();
+	} catch (e) {}
+	if (!preset) preset = factoryPresets[sel];
+	if (!preset) { showToast('Preset not found.', 'error'); return; }
+
+	// Apply to eCom vals and UI
+	Object.assign(ecomVals, preset);
+	ecomKeys.forEach(p => {
+		if (!(p.key in preset)) return;
+		setparam(p.key, String(preset[p.key]));
+	});
+	buildEcomGrid();
+	showToast('Preset loaded — review values then Save.', 'success');
+}
+
+function getCurrentEcomValues() {
+	const vals = {};
+	ecomKeys.forEach(p => {
+		const el = document.getElementById('ecom_' + p.key);
+		if (!el) return;
+		vals[p.key] = p.type === 'bool' ? (el.checked ? 1 : 0) : (parseFloat(el.value) || 0);
+	});
+	return vals;
+}
+
+function savePresetToFlash() {
+	const name = document.getElementById('preset-name').value.trim();
+	if (!name) { showToast('Enter a preset name first.', 'error'); return; }
+	const vals = getCurrentEcomValues();
+	const slug = name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+	const payload = JSON.stringify({ name, ...vals });
+	send(`_preset_save ${slug}\t${payload}\n`);
+	// Track slug in localStorage so the tag row stays populated
+	const saved = JSON.parse(localStorage.getItem('savedPresets') || '[]');
+	if (!saved.includes(slug)) { saved.push(slug); localStorage.setItem('savedPresets', JSON.stringify(saved)); }
+	showToast(`Preset "${name}" saved to device.`, 'success');
+	refreshSavedPresets();
+}
+
+function exportPreset() {
+	const name = document.getElementById('preset-name').value.trim() || 'ecom_preset';
+	const vals = getCurrentEcomValues();
+	const blob = new Blob([JSON.stringify({ name, ...vals }, null, 2)], { type: 'application/json' });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement('a');
+	a.href = url;
+	a.download = name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() + '.json';
+	a.click();
+	URL.revokeObjectURL(url);
+	showToast('Preset exported.', 'success');
+}
+
+function refreshSavedPresets() {
+	const stored = JSON.parse(localStorage.getItem('savedPresets') || '[]');
+	const row = document.getElementById('saved-presets-row');
+	if (!stored.length) { row.innerHTML = '<span style="color:var(--text3);font-size:0.72rem">No saved presets yet.</span>'; return; }
+	row.innerHTML = stored.map(p =>
+		`<span class="preset-tag">${p.replace(/_/g,' ')} ` +
+		`<span onclick="loadSavedPreset('${p}')" style="cursor:pointer" title="Load">↑</span> ` +
+		`<span onclick="deleteSavedPreset('${p}')" style="cursor:pointer;opacity:0.5" title="Remove from list">×</span></span>`
+	).join('');
+}
+
+function deleteSavedPreset(slug) {
+	const saved = JSON.parse(localStorage.getItem('savedPresets') || '[]');
+	const updated = saved.filter(s => s !== slug);
+	localStorage.setItem('savedPresets', JSON.stringify(updated));
+	refreshSavedPresets();
+	showToast(`Removed "${slug}" from list (still on device).`, '');
+}
+
+async function loadSavedPreset(slug) {
+	try {
+		const resp = await fetch(`/preset/${slug}.json`);
+		if (!resp.ok) throw new Error();
+		const preset = await resp.json();
+		Object.assign(ecomVals, preset);
+		ecomKeys.forEach(p => { if (p.key in preset) setparam(p.key, String(preset[p.key])); });
+		buildEcomGrid();
+		showToast(`Loaded "${slug}".`, 'success');
+	} catch {
+		showToast('Could not load saved preset.', 'error');
+	}
+}
+
+/* ─────────────────────────────────────────────────────
+   Init
+───────────────────────────────────────────────────── */
 setlang(localStorage.getItem('lang') || navigator.language.substring(0, 2) || 'en');
 setvolume(25);
+refreshSavedPresets();
 opentab(1);
 </script>
 </body>

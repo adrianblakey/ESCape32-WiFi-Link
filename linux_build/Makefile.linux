@@ -1,0 +1,64 @@
+# Makefile.linux — Native Linux/macOS build of the AART Wi-Fi Link server
+#
+# Usage:
+#   cd linux_build
+#   make -f Makefile.linux          # build server binary
+#   make -f Makefile.linux run      # build + run on port 8080
+#   make -f Makefile.linux test     # build + run test suite (24 tests)
+#   make -f Makefile.linux clean
+#   make -f Makefile.linux PORT=9090 run
+
+CC      = gcc
+SRC_DIR = ../main
+
+CFLAGS_COMMON = -g -Wall -Wno-unused-function -Wno-unused-variable \
+                -Wno-stringop-truncation \
+                -I. -DLINUX_NATIVE_BUILD -DDNS_DISABLED
+
+CFLAGS_PROD = -O2 $(CFLAGS_COMMON)
+CFLAGS_TEST = -O0 $(CFLAGS_COMMON) -DMOCK_UART_OVERRIDE
+
+LDFLAGS = -lpthread
+
+PORT    ?= 8080
+BINARY  = wifi_link_native
+TEST_BIN = wifi_link_test
+
+SRCS_PROD = linux_main.c linux_httpd.c main.c
+SRCS_TEST = test_ws.c    linux_httpd.c main.c
+
+.PHONY: all run test embed clean check-deps
+
+all: embed_data.h $(BINARY)
+
+# Step 1: gzip and embed the static files into embed_data.h
+embed_data.h: $(SRC_DIR)/root.html $(wildcard $(SRC_DIR)/root_*.json) embed_files.py
+	@echo "  [embed]  Generating embed_data.h..."
+	@python3 embed_files.py --src $(SRC_DIR) --out embed_data.h
+
+# Step 2: production server binary
+$(BINARY): esp_idf_shims.h linux_httpd.c main.c build_defs.h embed_data.h
+	@echo "  [cc]     Building $(BINARY)..."
+	@$(CC) $(CFLAGS_PROD) -o $@ $(SRCS_PROD) $(LDFLAGS)
+	@echo "  [ok]     $(BINARY) ready  —  open http://localhost:$(PORT)"
+
+# Test binary and run
+$(TEST_BIN): esp_idf_shims.h linux_httpd.c mock_uart.h main.c build_defs.h embed_data.h
+	@echo "  [cc]     Building $(TEST_BIN)..."
+	@$(CC) $(CFLAGS_TEST) -o $@ $(SRCS_TEST) $(LDFLAGS)
+
+test: embed_data.h $(TEST_BIN)
+	@echo "  [test]   Running test suite..."
+	@./$(TEST_BIN)
+
+run: all
+	./$(BINARY) --port $(PORT)
+
+clean:
+	rm -f $(BINARY) $(TEST_BIN) embed_data.h
+	rm -rf nvs_store mock_presets
+
+check-deps:
+	@python3 --version  >/dev/null 2>&1 || (echo "ERROR: python3 required"; exit 1)
+	@$(CC) --version    >/dev/null 2>&1 || (echo "ERROR: gcc required"; exit 1)
+	@echo "  [ok] Dependencies satisfied"
