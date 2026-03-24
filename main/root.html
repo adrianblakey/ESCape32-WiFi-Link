@@ -4,8 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AART Remora™ Programmer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
 	--bg:       #0d0e10;
@@ -27,14 +25,14 @@
 	--grnbg:    rgba(46,204,113,0.12);
 	--sel:      #8b5cf6;
 	--val:      #a5d0ff;
-	--mono:     'JetBrains Mono', monospace;
+	--mono:     Menlo, Monaco, Consolas, 'Lucida Console', monospace;
 }
 * { box-sizing: border-box; }
 html, body {
 	margin: 0; padding: 0;
 	background: var(--bg);
 	color: var(--text);
-	font-family: 'Barlow', sans-serif;
+	font-family: -apple-system, 'Trebuchet MS', Helvetica, Arial, sans-serif;
 	font-size: 15px;
 	line-height: 1.5;
 	min-height: 100vh;
@@ -50,7 +48,7 @@ html, body {
 	height: 52px;
 }
 #header .logo {
-	font-family: 'Rajdhani', sans-serif;
+	font-family: 'Trebuchet MS', 'Arial Narrow', Arial, sans-serif;
 	font-weight: 700;
 	font-size: 1.35rem;
 	letter-spacing: 0.12em;
@@ -59,7 +57,7 @@ html, body {
 	white-space: nowrap;
 }
 #header .subtitle {
-	font-family: 'Barlow', sans-serif;
+	font-family: -apple-system, 'Trebuchet MS', Helvetica, Arial, sans-serif;
 	font-size: 0.72rem;
 	font-weight: 300;
 	letter-spacing: 0.18em;
@@ -69,7 +67,7 @@ html, body {
 }
 #header .spacer { flex: 1; }
 #lang {
-	font-family: 'Barlow', sans-serif;
+	font-family: -apple-system, 'Trebuchet MS', Helvetica, Arial, sans-serif;
 	font-size: 0.75rem;
 	background: var(--bg3);
 	color: var(--text2);
@@ -95,7 +93,7 @@ html, body {
 	border-bottom: 2px solid var(--border);
 }
 #menu button.item {
-	font-family: 'Rajdhani', sans-serif;
+	font-family: 'Trebuchet MS', 'Arial Narrow', Arial, sans-serif;
 	font-size: 0.85rem;
 	font-weight: 600;
 	letter-spacing: 0.1em;
@@ -148,7 +146,7 @@ label { white-space: nowrap; font-size: 0.875rem; font-weight: 500; color: var(-
 .field-hint { font-size: 0.72rem; color: var(--text3); font-style: italic; }
 
 input, button, select, textarea {
-	font-family: 'Barlow', sans-serif;
+	font-family: -apple-system, 'Trebuchet MS', Helvetica, Arial, sans-serif;
 	font-size: 0.875rem;
 	background: var(--bg3);
 	color: var(--val);
@@ -199,7 +197,7 @@ select { cursor: pointer; }
 
 /* Buttons */
 button {
-	font-family: 'Rajdhani', sans-serif;
+	font-family: 'Trebuchet MS', 'Arial Narrow', Arial, sans-serif;
 	font-weight: 600;
 	font-size: 0.82rem;
 	letter-spacing: 0.1em;
@@ -234,7 +232,7 @@ hr {
 	margin: 1.2em 0;
 }
 .section-label {
-	font-family: 'Rajdhani', sans-serif;
+	font-family: 'Trebuchet MS', 'Arial Narrow', Arial, sans-serif;
 	font-size: 0.72rem;
 	font-weight: 600;
 	letter-spacing: 0.2em;
@@ -258,7 +256,7 @@ hr {
 
 /* ── INFO BOX ───────────────────────────────────────── */
 #info {
-	font-family: var(--mono);
+	font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
 	font-size: 0.78rem;
 	color: var(--text2);
 	background: var(--bg3);
@@ -280,7 +278,7 @@ hr {
 
 /* ── RESULT ─────────────────────────────────────────── */
 .result {
-	font-family: 'Rajdhani', sans-serif;
+	font-family: 'Trebuchet MS', 'Arial Narrow', Arial, sans-serif;
 	font-weight: 600;
 	font-size: 0.82rem;
 	letter-spacing: 0.08em;
@@ -791,7 +789,8 @@ function opentab(n) {
 		case 5:
 			if (delayed) { timer = setTimeout(() => { delayed = null; opentab(5); }, 2000); break; }
 			send('show\n');
-			resettimer(5);
+			// No watchdog: eCom is a one-shot load then idle.
+			// If the socket dies ws.onclose -> scheduleReconnect handles it.
 			break;
 		default:
 			showtab(n);
@@ -819,14 +818,17 @@ function hidetab(n) {
 	tabvis[n] = null;
 }
 
+/* ESC-response watchdog: arm after sending a command that expects a response.
+   If nothing comes back within 3s, drop the socket and reconnect.
+   Only fires for the currently active tab (n must match tabnum). */
 function resettimer(n) {
 	if (n && n != tabnum) return;
 	clearTimeout(timer);
 	timer = setTimeout(() => {
 		if (ws) { ws.onopen = ws.onmessage = ws.onclose = null; ws.close(); }
 		hidetab();
-		connect();
-	}, 2000);
+		scheduleReconnect();
+	}, 3000);
 }
 
 /* ─────────────────────────────────────────────────────
@@ -1039,9 +1041,8 @@ const handlers = {
 		if (tabnum == 1) showtab(1);
 		// Build eCom grid whenever we get fresh data — but only if not mid-edit
 		if (!ecomDirty) buildEcomGrid();
-		if (tabnum == 5) showtab(5);
-		// Reset watchdog for whichever tab triggered the show
-		resettimer(tabnum);
+		if (tabnum == 5) { showtab(5); clearTimeout(timer); }  // eCom is idle after show — disarm watchdog
+		else resettimer(tabnum);  // tab 1: keep watchdog alive for ongoing info polling
 	},
 	get: handler1,
 	set: handler1,
@@ -1108,8 +1109,8 @@ const handlers = {
    Connect
 ───────────────────────────────────────────────────── */
 function connect() {
-	resettimer();
-	try { ws = new WebSocket('ws://192.168.4.1/ws'); } catch(e) { return; }
+	clearTimeout(timer);  // cancel any pending watchdog before opening new socket
+	try { ws = new WebSocket(wsUrl()); } catch(e) { scheduleReconnect(); return; }
 	ws.onopen = () => { throtval = null; blocked = null; opentab(); };
 	ws.onmessage = (msg) => {
 		const data = msg.data.split('\n');
@@ -1118,7 +1119,21 @@ function connect() {
 		data.pop(); // Pop trailing empty string from final \n
 		if (handlers[cmd]) handlers[cmd](data.length && data.pop() == 'OK' ? data : null, ...args);
 	};
-	ws.onclose = () => { hidetab(); resettimer(); };
+	ws.onclose = () => { hidetab(); scheduleReconnect(); };
+}
+
+function wsUrl() {
+	// Allow override via ?ws=ws://host/ws for desktop testing
+	const p = new URLSearchParams(location.search);
+	return p.get('ws') || 'ws://192.168.4.1/ws';
+}
+
+/* Reconnect after a short delay — used only on socket close, NOT as a
+   response watchdog. Keeps the UI from hammering a starting server. */
+let reconnectTimer = null;
+function scheduleReconnect() {
+	clearTimeout(reconnectTimer);
+	reconnectTimer = setTimeout(connect, 1500);
 }
 
 /* ─────────────────────────────────────────────────────
