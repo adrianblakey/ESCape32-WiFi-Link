@@ -598,8 +598,21 @@ b.kbd {
 		<div id="ecom-grid">
 			<!-- rows injected by JS -->
 		</div>
-		<div class="btn-row" style="margin-top:1em">
-			<button class="primary" data-lang="B00" onclick="saveEcom()"></button>
+		<!-- Pending-changes indicator -->
+		<div id="ecom-pending-banner" style="display:none;background:var(--accentbg2);border:1px solid rgba(139,92,246,0.4);border-radius:3px;padding:0.5em 0.8em;margin-top:1em;font-size:0.8rem;color:var(--accent2);">
+			&#9679; Unsaved changes — arm the slider below to commit to ESC, or Reset to discard.
+		</div>
+
+		<!-- Arm-to-save slider (mirrors Settings tab behaviour) -->
+		<div class="throt-wrap" style="margin-top:0.8em">
+			<input type="range" min="0" max="2000" value="0" id="ecom-arm"
+			       oninput="setEcomArm(value)" onchange="setEcomArm(value)">
+			<div class="hint" id="ecom-arm-hint" style="opacity:0;transition:opacity 0.3s">
+				<span data-lang="H00"></span>
+			</div>
+		</div>
+
+		<div class="btn-row" style="margin-top:0.8em">
 			<button data-lang="B01" onclick="resetEcom()"></button>
 			<span class="result" id="result5"></span>
 		</div>
@@ -873,14 +886,16 @@ function checkdeps() {
 /* ─────────────────────────────────────────────────────
    eCom tab: build grid & value management
 ───────────────────────────────────────────────────── */
-const ecomVals = {}; // live values from firmware
+const ecomVals = {};     // live values from firmware
+const ecomPending = {};  // locally-edited values not yet sent to ESC
+let   ecomDirty = false; // true while user has unsaved local edits
 
 function buildEcomGrid() {
 	const grid = document.getElementById('ecom-grid');
 	const rows = ecomKeys.map(p => {
 		const inputHtml = p.type === 'bool'
-			? `<input type="checkbox" id="ecom_${p.key}" onchange="ecomSetBool('${p.key}', this.checked)">`
-			: `<input type="text" class="val" id="ecom_${p.key}" maxlength="6" value="${ecomVals[p.key] ?? ''}" onchange="ecomSetNum('${p.key}', this.value)">`;
+			? `<input type="checkbox" id="ecom_${p.key}" onchange="ecomMarkDirty('${p.key}', this.checked ? '1' : '0')">`
+			: `<input type="text" class="val" id="ecom_${p.key}" maxlength="6" value="${ecomVals[p.key] ?? ''}" onchange="ecomMarkDirty('${p.key}', this.value.trim())">`;
 		return `<div class="ecom-row">
 			<div class="ecom-row-inner">
 				<span class="ecom-key">${p.key}</span>
@@ -899,19 +914,77 @@ function buildEcomGrid() {
 	});
 }
 
-function ecomSetBool(key, checked) { setparam(key, checked ? '1' : '0'); }
-function ecomSetNum(key, val) { setparam(key, val.trim()); }
+/* Mark a field as locally edited — does NOT send to ESC yet */
+function ecomMarkDirty(key, val) {
+	ecomPending[key] = val;
+	ecomDirty = true;
+	const banner = document.getElementById('ecom-pending-banner');
+	const hint   = document.getElementById('ecom-arm-hint');
+	if (banner) banner.style.display = 'block';
+	if (hint)   hint.style.opacity = '1';
+}
 
 function saveEcom() {
-	ecomKeys.forEach(p => {
-		const el = document.getElementById('ecom_' + p.key);
-		if (!el) return;
-		const val = p.type === 'bool' ? (el.checked ? '1' : '0') : el.value.trim();
-		setparam(p.key, val);
+	// Send all pending dirty values to ESC
+	Object.entries(ecomPending).forEach(([key, val]) => {
+		if (val.length) send('set ' + key + ' ' + val + '\n');
 	});
+	// Then save to ESC flash
 	send('save\n');
+	// Clear dirty state
+	ecomDirty = false;
+	for (const k in ecomPending) delete ecomPending[k];
+	document.getElementById('ecom-arm-hint').style.opacity = '0';
+	// Refresh display from ESC
+	send('show\n');
 }
-function resetEcom() { send('reset\n'); send('show\n'); }
+function resetEcom() {
+	ecomDirty = false;
+	for (const k in ecomPending) delete ecomPending[k];
+	document.getElementById('ecom-arm-hint').style.opacity = '0';
+	send('reset\n');
+	send('show\n');
+}
+
+/* ─────────────────────────────────────────────────────
+   eCom arm-slider commit (mirrors Settings tab throttle arm)
+───────────────────────────────────────────────────── */
+let ecomArmVal = null;
+
+function setEcomArm(val) {
+	val = parseInt(val);
+	const slider = document.getElementById('ecom-arm');
+	const banner = document.getElementById('ecom-pending-banner');
+	// Show/hide pending banner whenever there are dirty values
+	if (ecomDirty) banner.style.display = 'block';
+	// Require slide right then left back to 0 — same mechanic as throttle arm
+	if (ecomArmVal === null && val > 100) {
+		// Started sliding right
+		ecomArmVal = val;
+		return;
+	}
+	if (ecomArmVal !== null && val < 50) {
+		// Slid back left to near-zero: commit
+		ecomArmVal = null;
+		slider.value = 0;
+		if (ecomDirty) saveEcom();
+		return;
+	}
+	ecomArmVal = val;
+}
+
+/* Keep pending banner in sync and hint visible whenever dirty */
+function ecomUpdateBanner() {
+	const banner = document.getElementById('ecom-pending-banner');
+	const hint   = document.getElementById('ecom-arm-hint');
+	if (ecomDirty) {
+		banner.style.display = 'block';
+		hint.style.opacity = '1';
+	} else {
+		banner.style.display = 'none';
+		hint.style.opacity = '0';
+	}
+}
 
 /* ─────────────────────────────────────────────────────
    WS message handlers
@@ -964,9 +1037,11 @@ const handlers = {
 		document.getElementById('show').innerHTML = res.join('');
 		checkdeps();
 		if (tabnum == 1) showtab(1);
-		// Build eCom grid whenever we get fresh data
-		buildEcomGrid();
+		// Build eCom grid whenever we get fresh data — but only if not mid-edit
+		if (!ecomDirty) buildEcomGrid();
 		if (tabnum == 5) showtab(5);
+		// Reset watchdog for whichever tab triggered the show
+		resettimer(tabnum);
 	},
 	get: handler1,
 	set: handler1,
