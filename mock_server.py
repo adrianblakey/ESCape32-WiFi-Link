@@ -83,6 +83,11 @@ MOCK_STATE = {
     "led":         0,
 }
 
+# ── Throttle and active-motor state for realistic telemetry ─────────────
+MOCK_THROTTLE = 0          # 0–2000, updated by throt command
+MOCK_MOTOR_KV    = 4500    # default: 4500 Kv (assumed if no motor selected)
+MOCK_MOTOR_POLES = 12      # default: 12 magnets = 6 pole pairs
+
 MOCK_INFO = {
     "bootloader_rev": "1.5",
     "io_pin":         1,
@@ -204,6 +209,7 @@ def ws_send(sock, text):
 # ESC command simulator
 # ──────────────────────────────────────────────────────────────────────────────
 def process_command(raw):
+    global MOCK_THROTTLE, MOCK_MOTOR_KV, MOCK_MOTOR_POLES
     cmd = raw.strip()
     log.info("CMD --> %r", cmd[:100])
 
@@ -212,7 +218,25 @@ def process_command(raw):
         return "show\n{}\nOK\n".format(body)
 
     if cmd == "info":
-        return "info\n12345 rpm  0.0A  3.7V\nOK\n"
+        import random as _r
+        # Throttle fraction 0.0–1.0  (throt range is 0–2000)
+        frac = max(0.0, min(1.0, MOCK_THROTTLE / 2000.0))
+        # Voltage scales linearly with throttle: 0 V at zero, 12.0–12.4 V at full
+        # Linear so that Kv recovery (RPM/V) stays consistent across the range
+        v_max = _r.uniform(12.0, 12.4)   # small supply variance, stable per call? No:
+        # Fix v_max per throttle position to avoid jitter in the Kv readout:
+        # Use throttle as seed for a deterministic-ish max voltage in [12.0, 12.4]
+        v_max = 12.0 + 0.4 * ((MOCK_THROTTLE % 7) / 6.0)
+        volt  = round(frac * v_max, 2) if frac > 0 else 0.0
+        # Pole pairs from the simulated motor (MOCK_MOTOR_POLES / 2)
+        pole_pairs = max(1, MOCK_MOTOR_POLES // 2)
+        kv         = MOCK_MOTOR_KV   # nominal Kv of the currently simulated motor
+        # eRPM = pole_pairs × Kv × Volts, ±2% noise
+        # Example: 22000 Kv, 3pp, 2V → ideal = 3 × 22000 × 2 = 132,000 eRPM
+        #          RPM = 132,000 / 3 = 44,000   Kv_recovered = 44,000 / 2 = 22,000 ✓
+        noise  = _r.uniform(-0.02, 0.02)
+        erpm   = int(pole_pairs * kv * volt * (1 + noise)) if volt > 0 else 0
+        return f"info\n{erpm} {volt}V 0.0A\nOK\n"
 
     m = re.match(r"^get (\w+)$", cmd)
     if m:
@@ -242,6 +266,7 @@ def process_command(raw):
 
     m = re.match(r"^throt (\d+)$", cmd)
     if m:
+        MOCK_THROTTLE = int(m.group(1))
         return "throt {}\nOK\n".format(m.group(1))
 
     if cmd.startswith("play "):
@@ -289,6 +314,14 @@ def process_command(raw):
         out.write_text(payload, encoding="utf-8")
         log.info("  PRESET saved: %s", out)
         return "_preset_save\nOK\n"
+
+    # Allow test/debug override of simulated motor parameters
+    import re as _re2
+    m2 = _re2.match(r"^_sim_motor (\d+)kv (\d+)poles$", cmd)
+    if m2:
+        MOCK_MOTOR_KV, MOCK_MOTOR_POLES = int(m2.group(1)), int(m2.group(2))
+        log.info("  SIM motor set to %d Kv %d poles", MOCK_MOTOR_KV, MOCK_MOTOR_POLES)
+        return "_sim_motor\nOK\n"
 
     log.warning("  UNHANDLED: %r", cmd)
     tag = cmd.split()[0] if cmd else "unknown"
@@ -352,6 +385,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 for lang in sorted(LANG_FILES.keys())
             ) or '<option value="en">EN</option>'
             text = text.replace("@LANG_OPTS@", opts)
+        if "@LANG_DATA@" in text:
+            import json as _json
+            lang_obj = "{" + ",".join(
+                '"{}": {}'.format(lang, raw)
+                for lang, raw in sorted(LANG_FILES.items())
+            ) + "}"
+            text = text.replace("@LANG_DATA@", lang_obj)
         text = text.replace("@PROJECT_VER@", "mock-dev")
         return text.encode()
 

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AART Remora™ Programmer</title>
+<script>const langData=@LANG_DATA@;</script>
 <style>
 :root {
 	--bg:       #0d0e10;
@@ -255,7 +256,7 @@ hr {
 .show .greyed input, .show .greyed select { color: var(--text3); }
 
 /* ── INFO BOX ───────────────────────────────────────── */
-#info {
+#info, #ecom-info {
 	font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
 	font-size: 0.78rem;
 	color: var(--text2);
@@ -323,7 +324,7 @@ progress {
 .ecom-key {
 	font-family: var(--mono);
 	font-size: 0.75rem;
-	color: var(--accent);
+	color: var(--text2);
 	min-width: 5.5em;
 	flex-shrink: 0;
 }
@@ -437,8 +438,49 @@ b.kbd {
 #toast.error { border-left-color: var(--red); }
 #toast.success { border-left-color: var(--grn); }
 
+/* ── PRESET SELECTORS ───────────────────────────────── */
+.preset-selectors { display:flex; flex-wrap:wrap; gap:0.4em; align-items:center; }
+.preset-selectors select { flex:1; min-width:7em; }
+
+/* ── MOTORS TAB ─────────────────────────────────────── */
+#motors-layout { display:flex; gap:1em; align-items:flex-start; }
+#motors-list-panel { flex:0 0 220px; }
+#motors-list { border:1px solid var(--border); border-radius:3px; overflow:auto; max-height:420px; }
+.motor-item { padding:0.45em 0.7em; cursor:pointer; border-bottom:1px solid var(--border); font-size:0.8rem; }
+.motor-item:last-child { border-bottom:none; }
+.motor-item:hover { background:var(--bg3); }
+.motor-item.active { background:var(--accentbg); border-left:3px solid var(--accent); }
+.motor-item .mi-vendor { color:var(--text3); font-size:0.72rem; }
+#motors-editor { flex:1; }
+.motor-form { display:grid; grid-template-columns:1fr 1fr; gap:0.4em 1em; }
+.mf-group { display:flex; flex-direction:column; gap:0.15em; }
+.mf-wide { grid-column:1/-1; }
+.mf-label { font-size:0.72rem; color:var(--text3); letter-spacing:0.04em; }
+.mf-group input, .mf-group select, .mf-group textarea {
+    background:var(--bg3); color:var(--text); border:1px solid var(--border);
+    border-radius:3px; padding:0.3em 0.5em; font-size:0.82rem; width:100%;
+}
+@media(max-width:600px){
+    #motors-layout { flex-direction:column; }
+    #motors-list-panel { flex:none; width:100%; }
+    .motor-form { grid-template-columns:1fr; }
+}
+
 /* ── BUTTONS ROW ────────────────────────────────────── */
 .btn-row { display: flex; gap: 0.5em; flex-wrap: wrap; align-items: center; margin-top: 0.8em; }
+
+/* ── TAB VISIBILITY TIERS ────────────────────────────── */
+#menu { display: flex; align-items: stretch; }
+/* Primary tabs: bright, clearly labelled */
+#menu button.item.primary-tab { color: var(--text2); }
+#menu button.item.primary-tab:hover { color: var(--text); }
+#menu button.item.primary-tab.active { color: var(--accent); }
+/* Secondary tabs: pushed right, visually de-emphasised */
+.secondary-tab { opacity: 0.38; font-size: 0.8em; }
+.secondary-tab:hover { opacity: 0.65; }
+.secondary-tab.active { opacity: 1; color: var(--accent2); }
+/* Spacer div pushes secondary tabs to far right */
+.menu-spacer { flex: 1; }
 </style>
 </head>
 <body>
@@ -452,11 +494,13 @@ b.kbd {
 
 <div id="main">
 	<div id="menu">
-		<button class="item" id="item1" data-lang="S00" onclick="opentab(1)"></button>
-		<button class="item" id="item2" data-lang="S01" onclick="opentab(2)"></button>
-		<button class="item" id="item5" onclick="opentab(5)">eCom</button>
-		<button class="item" id="item3" data-lang="S02" onclick="opentab(3)"></button>
-		<button class="item" id="item4" onclick="opentab(4)">Wi-Fi</button>
+		<button class="item primary-tab" id="item5" onclick="opentab(5)">eCom</button>
+		<button class="item primary-tab" id="item3" data-lang="S02" onclick="opentab(3)"></button>
+		<button class="item primary-tab" id="item6" onclick="opentab(6)">Motors</button>
+		<button class="item primary-tab" id="item4" onclick="opentab(4)">Wi-Fi</button>
+		<div class="menu-spacer"></div>
+		<button class="item secondary-tab" id="item1" data-lang="S00" onclick="opentab(1)"></button>
+		<button class="item secondary-tab" id="item2" data-lang="S01" onclick="opentab(2)"></button>
 	</div>
 
 	<!-- TAB 1: Settings -->
@@ -538,23 +582,23 @@ b.kbd {
 	<!-- TAB 4: Wi-Fi -->
 	<div class="tab loading-state" id="tab4off" data-lang="S04"></div>
 	<div class="tab" id="tab4on">
-		<div class="section-label">Access Point Identity</div>
+		<div class="section-label" data-lang="W00">Access Point Identity</div>
 		<div class="wifi-section">
 			<div class="wifi-grid">
 				<label for="wifi-ssid">SSID</label>
 				<input type="text" id="wifi-ssid" maxlength="32" placeholder="ESCape32-WiFi-Link">
-				<label for="wifi-pass">Password</label>
+				<label for="wifi-pass" data-lang="W01">Password</label>
 				<input type="password" id="wifi-pass" maxlength="64" placeholder="(open — no password)">
 			</div>
-			<div class="hint" style="margin-bottom:0.6em">Changes take effect after the device is power-cycled.</div>
+			<div class="hint" style="margin-bottom:0.6em" data-lang="W02">Changes take effect after the device is power-cycled.</div>
 			<div class="btn-row">
-				<button class="primary" onclick="saveWifi()">Save Wi-Fi</button>
-				<button class="danger" onclick="resetWifi()">Reset to Default</button>
+				<button class="primary" onclick="saveWifi()" data-lang="B00"></button>
+				<button class="danger" onclick="resetWifi()" data-lang="B01"></button>
 				<span class="result" id="result-wifi"></span>
 			</div>
 		</div>
 		<div class="hint">
-			Default SSID: <span class="badge">ESCape32-WiFi-Link</span> &nbsp; Default password: none (open).
+			<span data-lang="W03">Default SSID: <span class="badge">ESCape32-WiFi-Link</span> &nbsp; Default password: none (open).</span>
 		</div>
 	</div>
 
@@ -562,57 +606,132 @@ b.kbd {
 	<div class="tab loading-state" id="tab5off" data-lang="S03"></div>
 	<div class="tab" id="tab5on">
 
-		<!-- Preset loader -->
-		<div class="section-label">Motor Presets</div>
+		<!-- Motor Preset Panel -->
+		<div class="section-label" data-lang="E00">Motor Preset</div>
 		<div id="preset-panel">
-			<div class="hint" style="margin-bottom:0.5em">Load factory defaults for a known motor spec, or save/export your current values.</div>
-			<div class="preset-row">
-				<select id="preset-select">
-					<option value="">— select preset —</option>
-					<option value="2000kv_9n12p">2,000Kv 9N12P</option>
-					<option value="3500kv_9n12p">3,500Kv 9N12P</option>
-					<option value="4500kv_9n12p">4,500Kv 9N12P</option>
-					<option value="6000kv_9n12p">6,000Kv 9N12P</option>
-					<option value="6200kv_9n12p">6,200Kv 9N12P</option>
-					<option value="11000kv_9n12p">11,000Kv 9N12P</option>
-					<option value="13000kv_9n12p">13,000Kv 9N12P</option>
-					<option value="15000kv_9n12p">15,000Kv 9N12P</option>
-					<option value="22000kv_9n6p">22,000Kv 9N6P</option>
+			<div class="preset-selectors">
+				<select id="preset-vendor" onchange="presetVendorChange()">
+					<option value="" data-lang-opt="E01">— Vendor —</option>
 				</select>
-				<button class="primary" onclick="loadPreset()">Load Preset</button>
+				<select id="preset-model" onchange="presetModelChange()" disabled>
+					<option value="" data-lang-opt="E02">— Model —</option>
+				</select>
+				<select id="preset-kv" disabled>
+					<option value="" data-lang-opt="E03">— K<sub>v</sub> —</option>
+				</select>
+				<button class="primary" onclick="loadMotorPreset()" data-lang="E04">Load</button>
+				<button onclick="saveMotorPreset()">Save</button>
 			</div>
-			<hr style="margin:0.7em 0">
-			<div class="section-label" style="margin-bottom:0.3em">Save / Export</div>
-			<div id="saveas-wrap">
-				<input type="text" id="preset-name" placeholder="Preset name (e.g. My 6200Kv)" maxlength="48">
-				<button onclick="savePresetToFlash()">Save to Device</button>
-				<button onclick="exportPreset()">⬇ Export JSON</button>
-			</div>
-			<div id="saved-presets-row" class="preset-row" style="margin-top:0.5em"></div>
+			<div id="saved-presets-row" class="preset-row" style="margin-top:0.4em"></div>
+			<div id="ecom-pole-error" style="display:none;margin-top:0.4em;font-size:0.78rem;color:var(--red);"></div>
 		</div>
 
 		<!-- Essential parameters grid -->
-		<div class="section-label">Essential eCom Parameters</div>
+		<div class="section-label" data-lang="E05">Essential eCom Parameters</div>
 		<div id="ecom-grid">
 			<!-- rows injected by JS -->
 		</div>
 		<!-- Pending-changes indicator -->
 		<div id="ecom-pending-banner" style="display:none;background:var(--accentbg2);border:1px solid rgba(139,92,246,0.4);border-radius:3px;padding:0.5em 0.8em;margin-top:1em;font-size:0.8rem;color:var(--accent2);">
-			&#9679; Unsaved changes — arm the slider below to commit to ESC, or Reset to discard.
+			<span data-lang="E06">&#9679; Unsaved changes — press Save to commit to ESC, or Reset to discard.</span>
 		</div>
 
-		<!-- Arm-to-save slider (mirrors Settings tab behaviour) -->
+		<!-- Live throttle slider — sends throt to ESC -->
 		<div class="throt-wrap" style="margin-top:0.8em">
-			<input type="range" min="0" max="2000" value="0" id="ecom-arm"
-			       oninput="setEcomArm(value)" onchange="setEcomArm(value)">
-			<div class="hint" id="ecom-arm-hint" style="opacity:0;transition:opacity 0.3s">
-				<span data-lang="H00"></span>
-			</div>
+			<input type="range" min="0" max="2000" value="0" id="ecom-throt" oninput="setthrot(value)">
+			<div class="hint" data-lang="H00"></div>
 		</div>
+
+		<hr>
+		<div id="ecom-info"></div>
 
 		<div class="btn-row" style="margin-top:0.8em">
+			<button class="primary" data-lang="B00" onclick="saveEcom()"></button>
 			<button data-lang="B01" onclick="resetEcom()"></button>
 			<span class="result" id="result5"></span>
+		</div>
+	</div>
+
+	<!-- TAB 6: Motors -->
+	<div class="tab" id="tab6off" style="display:none"></div>
+	<div class="tab" id="tab6on" style="display:none">
+		<div class="section-label" style="margin-bottom:0.6em" data-lang="M00">Motor Database
+			<span id="db-status" style="font-size:0.72rem;font-weight:400;color:var(--text3);margin-left:1em"></span>
+		</div>
+
+		<!-- Motor list + editor side by side on wide screens -->
+		<div id="motors-layout">
+			<!-- Left: motor list -->
+			<div id="motors-list-panel">
+				<div style="display:flex;gap:0.4em;margin-bottom:0.5em">
+					<input type="text" id="motor-search" data-lang-ph="M01" placeholder="Search vendor / model…" oninput="renderMotorList()" style="flex:1">
+					<button class="primary" onclick="newMotor()" data-lang="M02">+ New</button>
+				</div>
+				<div id="motors-list"></div>
+			</div>
+
+			<!-- Right: motor editor -->
+			<div id="motors-editor" style="display:none">
+				<div class="section-label" id="motor-editor-title" data-lang="M03">Motor Details</div>
+				<div class="motor-form">
+
+					<div class="mf-group"><span class="mf-label" data-lang="M04">Vendor</span>
+						<input type="text" id="mf-vendor" placeholder="e.g. EMAX" maxlength="40"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M05">Model</span>
+						<input type="text" id="mf-model" placeholder="e.g. RS1106 II" maxlength="40"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M06">K<sub>v</sub> (rated)</span>
+						<input type="number" id="mf-kv" placeholder="e.g. 4500" min="0" max="99999"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M07">K<sub>v</sub> (measured)</span>
+						<input type="number" id="mf-kv-actual" placeholder="measured Kv" min="0" max="99999"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M08">Pole count (magnets)</span>
+						<input type="number" id="mf-poles" placeholder="e.g. 12" min="2" max="64"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M09">Stator slots</span>
+						<input type="number" id="mf-stator" placeholder="e.g. 9" min="1" max="48"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M10">Stator diameter (mm)</span>
+						<input type="number" id="mf-stator-dia" placeholder="mm" min="0" max="100" step="0.01"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M11">Windings</span>
+						<input type="text" id="mf-windings" placeholder="e.g. 5T or 5T×2 (double)" maxlength="20"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M12">Wire gauge (AWG / mm)</span>
+						<input type="text" id="mf-wire" placeholder="e.g. 26AWG or 0.38mm" maxlength="20"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M13">Winding scheme</span>
+						<select id="mf-scheme"><option value="">—</option><option>Star (Y)</option><option>Delta (Δ)</option></select></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M14">Magnet strength (N grade)</span>
+						<input type="text" id="mf-magnets" placeholder="e.g. N52" maxlength="10"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M15">Balance (mg)</span>
+						<input type="number" id="mf-balance" placeholder="mg" min="0" max="9999"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M16">Rotor inner Ø (mm)</span>
+						<input type="number" id="mf-rotor-id" placeholder="mm" min="0" max="100" step="0.01"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M17">Rotor outer Ø (mm)</span>
+						<input type="number" id="mf-rotor-od" placeholder="mm" min="0" max="100" step="0.01"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M18">Shaft Ø (mm)</span>
+						<input type="number" id="mf-shaft" placeholder="mm" min="0" max="20" step="0.01"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M19">Shaft fixation</span>
+						<input type="text" id="mf-fixation" placeholder="e.g. press fit, grub screw" maxlength="40"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M20">Length — flange to rotor end (mm)</span>
+						<input type="number" id="mf-length" placeholder="mm" min="0" max="200" step="0.01"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M21">Mounting flange hole centres (mm)</span>
+						<input type="number" id="mf-mount-centres" placeholder="mm" min="0" max="50" step="0.01"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M22">Fixing hole thread</span>
+						<input type="text" id="mf-mount-thread" placeholder="e.g. M2×0.4 or M1.4×0.3" maxlength="20"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M23">Mass incl. leads (g)</span>
+						<input type="number" id="mf-mass" placeholder="grams" min="0" max="999" step="0.1"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M24">Resistance incl. leads (m&#937;)</span>
+						<input type="number" id="mf-resistance" placeholder="mΩ" min="0" step="0.1"></div>
+					<div class="mf-group"><span class="mf-label" data-lang="M25">Inductance (&#181;H)</span>
+						<input type="number" id="mf-inductance" placeholder="μH" min="0" step="0.01"></div>
+					<div class="mf-group mf-wide"><span class="mf-label" data-lang="M26">Notes</span>
+						<textarea id="mf-notes" rows="2" placeholder="Additional notes…" maxlength="500" style="width:100%;resize:vertical"></textarea></div>
+					<div class="mf-group mf-wide"><span class="mf-label" data-lang="M27">Reference URL</span>
+						<input type="url" id="mf-url" placeholder="https://…" maxlength="200" style="width:100%"></div>
+				</div>
+
+				<div class="btn-row" style="margin-top:0.8em">
+					<button class="primary" onclick="saveMotorRecord()" data-lang="B00">Save</button>
+					<button onclick="cancelMotorEdit()" data-lang="M29">Cancel</button>
+					<button class="danger" onclick="deleteMotorRecord()" id="motor-delete-btn" data-lang="M30">Delete</button>
+					<button onclick="useMotorInEcom()" id="motor-use-btn" data-lang="M28" title="Use this motor's pole count for RPM/Kv display in eCom tab">Use in eCom</button>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -671,18 +790,18 @@ const deps = [
    eCom parameter definitions
 ───────────────────────────────────────────────────── */
 const ecomKeys = [
-	{ key: 'damp',       label: 'damp',       type: 'bool',   hint: 'Complementary PWM. Enable unless duty_min/max < 100%.' },
-	{ key: 'revdir',     label: 'revdir',     type: 'bool',   hint: 'Reverse motor direction (swap any two phase wires instead).' },
-	{ key: 'timing',     label: 'timing',     type: 'num',    min:0, max:31,  hint: 'Motor advance timing. High = faster no-load, more current.' },
-	{ key: 'freq_min',   label: 'freq_min',   type: 'num',    min:16, max:96, hint: 'Min PWM kHz. Low = lower losses; high Kv may need 48+.' },
-	{ key: 'freq_max',   label: 'freq_max',   type: 'num',    min:16, max:96, hint: 'Max PWM kHz. Matches freq_min for fixed frequency.' },
-	{ key: 'duty_min',   label: 'duty_min',   type: 'num',    min:0, max:100, hint: 'Min throttle power %. 100 = full; reduce to limit voltage.' },
-	{ key: 'duty_max',   label: 'duty_max',   type: 'num',    min:0, max:100, hint: 'Max throttle power %. 100 = full rail voltage.' },
-	{ key: 'duty_spup',  label: 'duty_spup',  type: 'num',    min:0, max:100, hint: 'Max spin-up power %. Limits inrush at startup.' },
-	{ key: 'duty_ramp',  label: 'duty_ramp',  type: 'num',    min:0, max:100, hint: 'Max power @ kERPM ramp threshold.' },
-	{ key: 'duty_rate',  label: 'duty_rate',  type: 'num',    min:1, max:100, hint: 'Duty cycle slew rate. Lower = softer start.' },
-	{ key: 'analog_min', label: 'analog_min', type: 'num',    min:0, max:2000,hint: 'Analog input min setpoint. Normally 0.' },
-	{ key: 'analog_max', label: 'analog_max', type: 'num',    min:0, max:2000,hint: 'Analog input max setpoint. Normally 1440.' },
+	{ key: 'damp',       label: 'damp',       type: 'bool',   hintKey: 'EC00' },
+	{ key: 'revdir',     label: 'revdir',     type: 'bool',   hintKey: 'EC01' },
+	{ key: 'timing',     label: 'timing',     type: 'num',    min:0, max:31,   hintKey: 'EC02' },
+	{ key: 'freq_min',   label: 'freq_min',   type: 'num',    min:16, max:96,  hintKey: 'EC03' },
+	{ key: 'freq_max',   label: 'freq_max',   type: 'num',    min:16, max:96,  hintKey: 'EC04' },
+	{ key: 'duty_min',   label: 'duty_min',   type: 'num',    min:0, max:100,  hintKey: 'EC05' },
+	{ key: 'duty_max',   label: 'duty_max',   type: 'num',    min:0, max:100,  hintKey: 'EC06' },
+	{ key: 'duty_spup',  label: 'duty_spup',  type: 'num',    min:0, max:100,  hintKey: 'EC07' },
+	{ key: 'duty_ramp',  label: 'duty_ramp',  type: 'num',    min:0, max:100,  hintKey: 'EC08' },
+	{ key: 'duty_rate',  label: 'duty_rate',  type: 'num',    min:1, max:100,  hintKey: 'EC09' },
+	{ key: 'analog_min', label: 'analog_min', type: 'num',    min:0, max:2000, hintKey: 'EC10' },
+	{ key: 'analog_max', label: 'analog_max', type: 'num',    min:0, max:2000, hintKey: 'EC11' },
 ];
 
 /* ─────────────────────────────────────────────────────
@@ -701,22 +820,24 @@ function showToast(msg, type='') {
    Language
 ───────────────────────────────────────────────────── */
 let strs = {};
-async function fetchlang(lang) {
-	const data = await fetch(`?${lang}`);
-	return data.json();
-}
 async function setlang(lang) {
-	try {
-		strs = await fetchlang(lang);
-		localStorage.setItem('lang', lang);
-		document.getElementById('lang').value = lang;
-		document.querySelectorAll('[data-lang]').forEach(elem => {
-			const key = elem.getAttribute('data-lang');
-			elem.innerHTML = strs[key] || '';
-		});
-	} catch (err) {
-		if (lang != 'en') setlang('en');
-		// silently fall through if 'en' also unavailable (offline preview)
+	// Use embedded langData (injected at serve time) — no network fetch needed
+	const d = (typeof langData !== 'undefined') && langData[lang];
+	if (d) {
+		strs = d;
+	} else if (lang !== 'en') {
+		return setlang('en');  // fallback
+	} else {
+		return;  // no data at all — offline preview without server
+	}
+	localStorage.setItem('lang', lang);
+	document.getElementById('lang').value = lang;
+	document.querySelectorAll('[data-lang]').forEach(elem => {
+		elem.innerHTML = strs[elem.getAttribute('data-lang')] || '';
+	});
+	// Refresh dynamically-built eCom grid so hints update in the new language
+	if (typeof buildEcomGrid === 'function' && document.getElementById('ecom-grid')?.children.length) {
+		buildEcomGrid();
 	}
 }
 
@@ -760,7 +881,11 @@ function opentab(n) {
 	tabnum = n;
 	tabvis = {};
 	clearresults();
-	document.querySelectorAll('.item').forEach(el => el.className = 'item');
+	document.querySelectorAll('.item').forEach(el => {
+		const tier = el.classList.contains('secondary-tab') ? ' secondary-tab'
+					: el.classList.contains('primary-tab') ? ' primary-tab' : '';
+		el.className = 'item' + tier;
+	});
 	document.querySelectorAll('.tab').forEach(el => el.style.display = 'none');
 	document.getElementById('item' + n).className = 'item active';
 	const offEl = document.getElementById('tab' + n + 'off');
@@ -788,9 +913,16 @@ function opentab(n) {
 			break;
 		case 5:
 			if (delayed) { timer = setTimeout(() => { delayed = null; opentab(5); }, 2000); break; }
+			ival = setInterval(() => { send('info\n'); }, 500);
+			send('info\n');
 			send('show\n');
-			// No watchdog: eCom is a one-shot load then idle.
-			// If the socket dies ws.onclose -> scheduleReconnect handles it.
+			// Restore preset selector state (preserves vendor/model/Kv across tab switches)
+			populatePresetSelectors();
+			// No show-watchdog: eCom grid is one-shot. info interval keeps connection alive.
+			break;
+		case 6:
+			showtab(6);
+			initMotorDb().then(() => { populatePresetSelectors(); renderMotorList(); });
 			break;
 		default:
 			showtab(n);
@@ -903,7 +1035,7 @@ function buildEcomGrid() {
 				<span class="ecom-key">${p.key}</span>
 				${inputHtml}
 			</div>
-			<div class="ecom-hint">${p.hint}</div>
+			<div class="ecom-hint">${strs[p.hintKey] || p.hintKey}</div>
 		</div>`;
 	});
 	grid.innerHTML = rows.join('');
@@ -921,9 +1053,7 @@ function ecomMarkDirty(key, val) {
 	ecomPending[key] = val;
 	ecomDirty = true;
 	const banner = document.getElementById('ecom-pending-banner');
-	const hint   = document.getElementById('ecom-arm-hint');
 	if (banner) banner.style.display = 'block';
-	if (hint)   hint.style.opacity = '1';
 }
 
 function saveEcom() {
@@ -936,56 +1066,23 @@ function saveEcom() {
 	// Clear dirty state
 	ecomDirty = false;
 	for (const k in ecomPending) delete ecomPending[k];
-	document.getElementById('ecom-arm-hint').style.opacity = '0';
 	// Refresh display from ESC
 	send('show\n');
 }
 function resetEcom() {
 	ecomDirty = false;
 	for (const k in ecomPending) delete ecomPending[k];
-	document.getElementById('ecom-arm-hint').style.opacity = '0';
 	send('reset\n');
 	send('show\n');
 }
 
 /* ─────────────────────────────────────────────────────
-   eCom arm-slider commit (mirrors Settings tab throttle arm)
+   eCom throttle and preset management
 ───────────────────────────────────────────────────── */
-let ecomArmVal = null;
-
-function setEcomArm(val) {
-	val = parseInt(val);
-	const slider = document.getElementById('ecom-arm');
-	const banner = document.getElementById('ecom-pending-banner');
-	// Show/hide pending banner whenever there are dirty values
-	if (ecomDirty) banner.style.display = 'block';
-	// Require slide right then left back to 0 — same mechanic as throttle arm
-	if (ecomArmVal === null && val > 100) {
-		// Started sliding right
-		ecomArmVal = val;
-		return;
-	}
-	if (ecomArmVal !== null && val < 50) {
-		// Slid back left to near-zero: commit
-		ecomArmVal = null;
-		slider.value = 0;
-		if (ecomDirty) saveEcom();
-		return;
-	}
-	ecomArmVal = val;
-}
-
-/* Keep pending banner in sync and hint visible whenever dirty */
+/* ecomUpdateBanner — show/hide pending-changes indicator */
 function ecomUpdateBanner() {
 	const banner = document.getElementById('ecom-pending-banner');
-	const hint   = document.getElementById('ecom-arm-hint');
-	if (ecomDirty) {
-		banner.style.display = 'block';
-		hint.style.opacity = '1';
-	} else {
-		banner.style.display = 'none';
-		hint.style.opacity = '0';
-	}
+	if (banner) banner.style.display = ecomDirty ? 'block' : 'none';
 }
 
 /* ─────────────────────────────────────────────────────
@@ -1022,7 +1119,33 @@ function handler2(ok) {
 const handlers = {
 	info: (data) => {
 		if (!data) return;
-		document.getElementById('info').innerHTML = data.join('<br>');
+		const lines = data.map(line => {
+			// Parse "eRPM V A" fields and augment with RPM and Kv if poles known
+			// ESCape32 info format: "<eRPM> <volts>V <amps>A [<csum>mAh] [<temp>°C]"
+			// Match: "<eRPM> <volts>V <amps>A ..."
+			const erpmM = line.match(/^(\d+)\s+(\d+\.?\d*)V\s*(\d+\.?\d*)A(.*)$/i);
+			if (!erpmM) return line;  // not a telemetry line, return as-is
+			const erpm  = parseInt(erpmM[1]);
+			const volts = parseFloat(erpmM[2]);
+			const amps  = erpmM[3];
+			const rest  = erpmM[4].trim();
+			const poles = activeMotorPoles
+				|| parseInt(localStorage.getItem('activeMotorPoles')) || 0;
+			// Rebuild the base line with eRPM labelled
+			let base = `eRPM ${erpm.toLocaleString()}  ${volts}V  ${amps}A`;
+			if (rest) base += `  ${rest}`;
+			// Append computed RPM and Kv if pole count is known
+			if (poles >= 2 && volts > 0) {
+				const rpm = Math.round(erpm / (poles / 2));
+				const kv  = Math.round(rpm / volts);
+				return base + `  <span style="color:var(--accent2)">${rpm.toLocaleString()} RPM  ${kv} K<sub>v</sub></span>`;
+			}
+			return base;
+		});
+		const rendered = lines.join('<br>');
+		document.getElementById('info').innerHTML = rendered;
+		const ecomInfo = document.getElementById('ecom-info');
+		if (ecomInfo) ecomInfo.innerHTML = rendered;
 		resettimer(1);
 	},
 	show: (data) => {
@@ -1147,6 +1270,9 @@ function setparam(key, val) {
 function setthrot(val) {
 	if (throtval == null) send(`throt ${val}\n`);
 	throtval = val;
+	// Keep the Settings-tab slider in sync when driven from eCom-tab slider
+	const t1 = document.getElementById('throt');
+	if (t1 && t1 !== document.activeElement) t1.value = val;
 }
 function setvolume(val) {
 	document.getElementById('volume').value = val;
@@ -1288,119 +1414,400 @@ function resetWifi() {
    Preset management
 ───────────────────────────────────────────────────── */
 
-// Factory presets — values tuned per motor spec
-const factoryPresets = {
-	'2000kv_9n12p':  { damp:1, revdir:0, timing:8,  freq_min:24, freq_max:24, duty_min:100, duty_max:100, duty_spup:15, duty_ramp:35, duty_rate:20, analog_min:0, analog_max:1440 },
-	'3500kv_9n12p':  { damp:1, revdir:0, timing:10, freq_min:24, freq_max:48, duty_min:100, duty_max:100, duty_spup:20, duty_ramp:40, duty_rate:25, analog_min:0, analog_max:1440 },
-	'4500kv_9n12p':  { damp:1, revdir:0, timing:12, freq_min:24, freq_max:48, duty_min:100, duty_max:100, duty_spup:25, duty_ramp:45, duty_rate:30, analog_min:0, analog_max:1440 },
-	'6000kv_9n12p':  { damp:1, revdir:0, timing:14, freq_min:48, freq_max:48, duty_min:100, duty_max:100, duty_spup:30, duty_ramp:50, duty_rate:35, analog_min:0, analog_max:1440 },
-	'6200kv_9n12p':  { damp:1, revdir:0, timing:14, freq_min:48, freq_max:48, duty_min:100, duty_max:100, duty_spup:30, duty_ramp:50, duty_rate:35, analog_min:0, analog_max:1440 },
-	'11000kv_9n12p': { damp:1, revdir:0, timing:18, freq_min:48, freq_max:96, duty_min:100, duty_max:100, duty_spup:40, duty_ramp:60, duty_rate:50, analog_min:0, analog_max:1440 },
-	'13000kv_9n12p': { damp:1, revdir:0, timing:20, freq_min:48, freq_max:96, duty_min:100, duty_max:100, duty_spup:45, duty_ramp:65, duty_rate:55, analog_min:0, analog_max:1440 },
-	'15000kv_9n12p': { damp:1, revdir:0, timing:22, freq_min:48, freq_max:96, duty_min:100, duty_max:100, duty_spup:50, duty_ramp:70, duty_rate:60, analog_min:0, analog_max:1440 },
-	'22000kv_9n6p':  { damp:1, revdir:0, timing:26, freq_min:96, freq_max:96, duty_min:100, duty_max:100, duty_spup:60, duty_ramp:80, duty_rate:75, analog_min:0, analog_max:1440 },
-};
+// MOTOR DATABASE — built-in catalog entries
+// Each motor: { vendor, model, poles, kv[], params{} }
+const BUILTIN_MOTORS = [
+  { vendor:'EMAX',    model:'RS1106 II', poles:12, kvList:[4500,6000,7500],
+    params:{ damp:1,revdir:0,timing:14,freq_min:48,freq_max:96,duty_min:100,duty_max:100,duty_spup:30,duty_ramp:50,duty_rate:35,analog_min:0,analog_max:1440 }},
+  { vendor:'Parma',   model:'1105',      poles:12, kvList:[3000,4500,6500],
+    params:{ damp:1,revdir:0,timing:12,freq_min:48,freq_max:48,duty_min:100,duty_max:100,duty_spup:25,duty_ramp:45,duty_rate:30,analog_min:0,analog_max:1440 }},
+  { vendor:'Do-Slot', model:'12-1105',   poles:12, kvList:[18500],
+    params:{ damp:1,revdir:0,timing:28,freq_min:96,freq_max:96,duty_min:100,duty_max:100,duty_spup:70,duty_ramp:90,duty_rate:80,analog_min:0,analog_max:1440 }},
+  { vendor:'Do-Slot', model:'10.503',    poles:12, kvList:[11000],
+    params:{ damp:1,revdir:0,timing:20,freq_min:96,freq_max:96,duty_min:100,duty_max:100,duty_spup:55,duty_ramp:75,duty_rate:65,analog_min:0,analog_max:1440 }},
+  { vendor:'Do-Slot', model:'1105',      poles:6,  kvList:[17500,21500],
+    params:{ damp:1,revdir:0,timing:26,freq_min:96,freq_max:96,duty_min:100,duty_max:100,duty_spup:65,duty_ramp:85,duty_rate:75,analog_min:0,analog_max:1440 }},
+  { vendor:'Do-Slot', model:'1105',      poles:12, kvList:[2000,6000,9000,11000],
+    params:{ damp:1,revdir:0,timing:14,freq_min:24,freq_max:96,duty_min:100,duty_max:100,duty_spup:20,duty_ramp:40,duty_rate:30,analog_min:0,analog_max:1440 }},
+  { vendor:'AMAX',    model:'1103 Competition', poles:12, kvList:[5000,6000,7500,9000,11000,13000,17000,22000],
+    params:{ damp:1,revdir:0,timing:16,freq_min:48,freq_max:96,duty_min:100,duty_max:100,duty_spup:35,duty_ramp:55,duty_rate:45,analog_min:0,analog_max:1440 }},
+  { vendor:'AMAX',    model:'1106 Competition', poles:12, kvList:[3300,3700,4200,4800,5500,6500],
+    params:{ damp:1,revdir:0,timing:12,freq_min:48,freq_max:48,duty_min:100,duty_max:100,duty_spup:25,duty_ramp:45,duty_rate:30,analog_min:0,analog_max:1440 }},
+  { vendor:'AART', model:'1105', poles:6, kvList:[22000],
+    stator:9, statorDia:13.68, windings:'5T', wire:'0.38mm', scheme:'Delta (Δ)',
+    shaft:1.5, rotorOd:13.68, notes:'110mm lead wires.',
+    params:{ damp:1,revdir:0,timing:28,freq_min:96,freq_max:96,duty_min:100,duty_max:100,duty_spup:70,duty_ramp:90,duty_rate:80,analog_min:0,analog_max:1440 }},
+];
 
-async function loadPreset() {
-	const sel = document.getElementById('preset-select').value;
-	if (!sel) { showToast('Select a preset first.', 'error'); return; }
+// ── IndexedDB motor database ──────────────────────────────────────
+const DB_NAME = 'aart_motors', DB_VER = 1, STORE = 'motors';
+let motorDb = null, motorDbReady = false;
 
-	// Try fetching from device first, fallback to built-in
-	let preset;
-	try {
-		const resp = await fetch(`/preset/${sel}.json`);
-		if (resp.ok) preset = await resp.json();
-	} catch (e) {}
-	if (!preset) preset = factoryPresets[sel];
-	if (!preset) { showToast('Preset not found.', 'error'); return; }
+function openMotorDb() {
+  return new Promise((res, rej) => {
+    if (!window.indexedDB) { rej(new Error('IndexedDB not supported')); return; }
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        const s = db.createObjectStore(STORE, { keyPath:'id', autoIncrement:true });
+        s.createIndex('vendor', 'vendor', { unique:false });
+      }
+    };
+    req.onsuccess = e => res(e.target.result);
+    req.onerror   = e => rej(e.target.error);
+  });
+}
 
-	// Apply to eCom vals and UI
-	Object.assign(ecomVals, preset);
-	ecomKeys.forEach(p => {
-		if (!(p.key in preset)) return;
-		setparam(p.key, String(preset[p.key]));
-	});
-	buildEcomGrid();
-	showToast('Preset loaded — review values then Save.', 'success');
+async function dbGetAll()          { return txn('readonly',  s => s.getAll()); }
+async function dbPut(rec)          { return txn('readwrite', s => s.put(rec)); }
+async function dbDelete(id)        { return txn('readwrite', s => s.delete(id)); }
+function txn(mode, fn) {
+  return new Promise((res, rej) => {
+    const t = motorDb.transaction(STORE, mode);
+    const req = fn(t.objectStore(STORE));
+    req.onsuccess = e => res(e.target.result);
+    req.onerror   = e => rej(e.target.error);
+  });
+}
+
+// Increment this whenever BUILTIN_MOTORS gains new entries.
+// initMotorDb() will merge in any built-ins not already in the DB.
+const BUILTIN_CATALOG_VERSION = 3;
+
+async function initMotorDb() {
+  const st = document.getElementById('db-status');
+  try {
+    motorDb = await openMotorDb();
+    motorDbReady = true;
+    const existing = await dbGetAll();
+    const storedVersion = parseInt(localStorage.getItem('motorCatalogVersion') || '0');
+
+    if (!existing.length) {
+      // Fresh DB — seed everything
+      for (const m of BUILTIN_MOTORS) await dbPut({ ...m, _builtin: true });
+      localStorage.setItem('motorCatalogVersion', BUILTIN_CATALOG_VERSION);
+      if (st) st.textContent = `${BUILTIN_MOTORS.length} built-in motors loaded`;
+    } else if (storedVersion < BUILTIN_CATALOG_VERSION) {
+      // Catalog updated — upsert all built-ins:
+      //   • add any that are missing
+      //   • update existing _builtin records so field fixes are picked up
+      let added = 0, updated = 0;
+      for (const m of BUILTIN_MOTORS) {
+        const existing_rec = existing.find(e =>
+          e.vendor === m.vendor && e.model === m.model &&
+          String(e.poles) === String(m.poles) &&
+          JSON.stringify(e.kvList) === JSON.stringify(m.kvList)
+        );
+        if (!existing_rec) {
+          await dbPut({ ...m, _builtin: true }); added++;
+        } else if (existing_rec._builtin) {
+          // Update built-in record preserving any user-added fields
+          await dbPut({ ...existing_rec, ...m, id: existing_rec.id, _builtin: true }); updated++;
+        }
+      }
+      localStorage.setItem('motorCatalogVersion', BUILTIN_CATALOG_VERSION);
+      const all = await dbGetAll();
+      if (st) st.textContent = `${all.length} motors${added ? ` (+${added} new)` : ''}${updated ? ` (${updated} updated)` : ''}`;
+    } else {
+      if (st) st.textContent = `${existing.length} motors`;
+    }
+    if (typeof renderMotorList === 'function') renderMotorList();
+  } catch (err) {
+    if (st) st.textContent = 'Local database not available';
+    console.warn('Motor DB error:', err);
+  }
+}
+
+// ── Motor list rendering ──────────────────────────────────────────
+let allMotors = [], activeMotorId = null;
+
+async function renderMotorList() {
+  if (!motorDbReady) return;
+  const q = (document.getElementById('motor-search')?.value || '').toLowerCase();
+  allMotors = await dbGetAll();
+  const filtered = allMotors.filter(m =>
+    !q || m.vendor?.toLowerCase().includes(q) || m.model?.toLowerCase().includes(q)
+  );
+  const el = document.getElementById('motors-list');
+  if (!el) return;
+  if (!filtered.length) { el.innerHTML = '<div class="motor-item" style="color:var(--text3)">No motors found</div>'; return; }
+  el.innerHTML = filtered.map(m =>
+    `<div class="motor-item${m.id === activeMotorId ? ' active' : ''}" onclick="editMotor(${m.id})">
+       <div>${m.vendor || '—'} <b>${m.model || '—'}</b></div>
+       <div class="mi-vendor">${m.kvList?.join(', ')||''} K<sub>v</sub> · ${m.poles||'?'} poles</div>
+     </div>`
+  ).join('');
+}
+
+function newMotor() {
+  activeMotorId = null;
+  fillMotorForm({});
+  document.getElementById('motor-editor-title').textContent = 'New Motor';
+  document.getElementById('motor-delete-btn').style.display = 'none';
+  document.getElementById('motors-editor').style.display = '';
+}
+
+function editMotor(id) {
+  const m = allMotors.find(x => x.id === id);
+  if (!m) return;
+  activeMotorId = id;
+  fillMotorForm(m);
+  document.getElementById('motor-editor-title').textContent = `${m.vendor||''} ${m.model||''}`.trim() || 'Edit Motor';
+  document.getElementById('motor-delete-btn').style.display = '';
+  document.getElementById('motors-editor').style.display = '';
+  renderMotorList();
+}
+
+function fillMotorForm(m) {
+  const f = id => document.getElementById(id);
+  f('mf-vendor').value        = m.vendor       || '';
+  f('mf-model').value         = m.model        || '';
+  f('mf-kv').value            = m.kvList?.[0]  || '';
+  f('mf-kv-actual').value     = m.kvActual     || '';
+  f('mf-poles').value         = m.poles        || '';
+  f('mf-stator').value        = m.stator       || '';
+  f('mf-stator-dia').value    = m.statorDia    || '';
+  f('mf-windings').value      = m.windings     || '';
+  f('mf-wire').value          = m.wire         || '';
+  f('mf-scheme').value        = m.scheme       || '';
+  f('mf-magnets').value       = m.magnets      || '';
+  f('mf-balance').value       = m.balance      || '';
+  f('mf-rotor-id').value      = m.rotorId      || '';
+  f('mf-rotor-od').value      = m.rotorOd      || '';
+  f('mf-shaft').value         = m.shaft        || '';
+  f('mf-fixation').value      = m.fixation     || '';
+  f('mf-length').value        = m.length       || '';
+  f('mf-mount-centres').value = m.mountCentres || '';
+  f('mf-mount-thread').value  = m.mountThread  || '';
+  f('mf-mass').value          = m.mass         || '';
+  f('mf-resistance').value    = m.resistance   || '';
+  f('mf-inductance').value    = m.inductance   || '';
+  f('mf-notes').value         = m.notes        || '';
+  f('mf-url').value           = m.url          || '';
+}
+
+function readMotorForm() {
+  const v = id => document.getElementById(id)?.value.trim();
+  const n = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const kvRaw = v('mf-kv');
+  const kvList = kvRaw.split(/[,\s]+/).map(Number).filter(Boolean);
+  return {
+    vendor:       v('mf-vendor'),
+    model:        v('mf-model'),
+    kvList:       kvList.length ? kvList : undefined,
+    kvActual:     n('mf-kv-actual')     || undefined,
+    poles:        parseInt(v('mf-poles')) || undefined,
+    stator:       parseInt(v('mf-stator')) || undefined,
+    statorDia:    n('mf-stator-dia')    || undefined,
+    windings:     v('mf-windings')      || undefined,
+    wire:         v('mf-wire')          || undefined,
+    scheme:       v('mf-scheme')        || undefined,
+    magnets:      v('mf-magnets')       || undefined,
+    balance:      n('mf-balance')       || undefined,
+    rotorId:      n('mf-rotor-id')      || undefined,
+    rotorOd:      n('mf-rotor-od')      || undefined,
+    shaft:        n('mf-shaft')         || undefined,
+    fixation:     v('mf-fixation')      || undefined,
+    length:       n('mf-length')        || undefined,
+    mountCentres: n('mf-mount-centres') || undefined,
+    mountThread:  v('mf-mount-thread')  || undefined,
+    mass:         n('mf-mass')          || undefined,
+    resistance:   n('mf-resistance')    || undefined,
+    inductance:   n('mf-inductance')    || undefined,
+    notes:        v('mf-notes')         || undefined,
+    url:          v('mf-url')           || undefined,
+  };
+}
+
+async function saveMotorRecord() {
+  const rec = readMotorForm();
+  if (!rec.vendor && !rec.model) { showToast('Enter at least a vendor or model name.', 'error'); return; }
+  if (activeMotorId) rec.id = activeMotorId;
+  await dbPut(rec);
+  showToast('Motor saved.', 'success');
+  document.getElementById('motors-editor').style.display = 'none';
+  activeMotorId = null;
+  renderMotorList();
+  populatePresetSelectors();
+  const st = document.getElementById('db-status');
+  if (st) { const all = await dbGetAll(); st.textContent = `${all.length} motors`; }
+}
+
+async function deleteMotorRecord() {
+  if (!activeMotorId) return;
+  if (!confirm('Delete this motor record?')) return;
+  await dbDelete(activeMotorId);
+  document.getElementById('motors-editor').style.display = 'none';
+  activeMotorId = null;
+  renderMotorList();
+  populatePresetSelectors();
+}
+
+function cancelMotorEdit() {
+  document.getElementById('motors-editor').style.display = 'none';
+  activeMotorId = null;
+  renderMotorList();
+}
+
+// Use this motor's pole count for RPM/Kv calculation in eCom tab
+let activeMotorPoles = null;
+function useMotorInEcom() {
+  const rec = activeMotorId ? allMotors.find(x => x.id === activeMotorId) : null;
+  if (!rec?.poles) { showToast('No pole count set for this motor.', 'error'); return; }
+  activeMotorPoles = rec.poles;
+  localStorage.setItem('activeMotorPoles', activeMotorPoles);
+  showToast(`Active motor: ${rec.vendor||''} ${rec.model||''} — ${rec.poles} poles (${rec.poles/2} pole pairs). RPM/K<sub>v</sub> display updated.`, 'success');
+}
+
+// ── Preset selector (eCom tab) ────────────────────────────────────
+async function populatePresetSelectors() {
+  const motors = motorDbReady ? await dbGetAll() : BUILTIN_MOTORS;
+  const vendors = [...new Set(motors.map(m => m.vendor).filter(Boolean))].sort();
+  const vs = document.getElementById('preset-vendor');
+  const ms = document.getElementById('preset-model');
+  const ks = document.getElementById('preset-kv');
+  if (!vs) return;
+  // Snapshot current selections before rebuilding
+  const prevV = vs.value;
+  const prevM = ms?.value || '';
+  const prevK = ks?.value  || '';
+  // Rebuild vendor list, restore previous selection
+  vs.innerHTML = '<option value="">— Vendor —</option>' +
+    vendors.map(v => `<option${v===prevV?' selected':''}>${v}</option>`).join('');
+  // Rebuild model list for that vendor, restore previous selection
+  if (prevV) {
+    const pool = Array.isArray(motors) ? motors : allMotors;
+    const models = [...new Set(pool.filter(m=>m.vendor===prevV).map(m=>m.model).filter(Boolean))].sort();
+    if (ms) {
+      ms.innerHTML = '<option value="">— Model —</option>' +
+        models.map(m => `<option${m===prevM?' selected':''}>${m}</option>`).join('');
+      ms.disabled = false;
+    }
+    // Rebuild Kv list for that model, restore previous selection
+    if (prevM) {
+      const motor = (Array.isArray(motors)?motors:allMotors).find(m=>m.vendor===prevV&&m.model===prevM);
+      const kvs = motor?.kvList || [];
+      if (ks) {
+        ks.innerHTML = '<option value="">— Kv —</option>' +
+          kvs.map(k => `<option${String(k)===prevK?' selected':''}>${k}</option>`).join('');
+        ks.disabled = false;
+      }
+    } else {
+      if (ks) { ks.innerHTML='<option value="">— Kv —</option>'; ks.disabled=true; }
+    }
+  } else {
+    if (ms) { ms.innerHTML='<option value="">— Model —</option>'; ms.disabled=true; }
+    if (ks) { ks.innerHTML='<option value="">— Kv —</option>';   ks.disabled=true; }
+  }
+}
+
+function presetVendorChange(motors) {
+  const vendor = document.getElementById('preset-vendor')?.value;
+  const ms = document.getElementById('preset-model');
+  const ks = document.getElementById('preset-kv');
+  if (!ms || !ks) return;
+  if (!vendor) {
+    ms.innerHTML='<option value="">— Model —</option>'; ms.disabled=true;
+    ks.innerHTML='<option value="">— Kv —</option>';   ks.disabled=true;
+    return;
+  }
+  const pool = Array.isArray(motors) ? motors : allMotors;
+  const models = [...new Set(pool.filter(m=>m.vendor===vendor).map(m=>m.model).filter(Boolean))].sort();
+  ms.innerHTML='<option value="">— Model —</option>'+models.map(m=>`<option>${m}</option>`).join('');
+  ms.disabled=false;
+  ks.innerHTML='<option value="">— Kv —</option>'; ks.disabled=true;
+}
+
+function presetModelChange() {
+  const vendor = document.getElementById('preset-vendor')?.value;
+  const model  = document.getElementById('preset-model')?.value;
+  const ks = document.getElementById('preset-kv');
+  if (!ks) return;
+  if (!model) { ks.innerHTML='<option value="">— Kv —</option>'; ks.disabled=true; return; }
+  const motor = allMotors.find(m=>m.vendor===vendor&&m.model===model);
+  const kvs = motor?.kvList || [];
+  ks.innerHTML='<option value="">— Kv —</option>'+kvs.map(k=>`<option>${k}</option>`).join('');
+  ks.disabled=false;
+}
+
+async function loadMotorPreset() {
+  const vendor = document.getElementById('preset-vendor')?.value;
+  const model  = document.getElementById('preset-model')?.value;
+  const kv     = parseInt(document.getElementById('preset-kv')?.value) || 0;
+  if (!vendor||!model) { showToast('Select vendor and model first.', 'error'); return; }
+  const motor = allMotors.find(m=>m.vendor===vendor&&m.model===model);
+  if (!motor?.params) { showToast('No parameters stored for this motor.', 'error'); return; }
+  const preset = { ...motor.params };
+  Object.assign(ecomVals, preset);
+  ecomKeys.forEach(p => { if (p.key in preset) ecomPending[p.key]=String(preset[p.key]); });
+  ecomDirty = true;
+  buildEcomGrid();
+  // Update active poles for RPM/Kv display — show error if missing
+  const errEl = document.getElementById('ecom-pole-error');
+  if (motor.poles && motor.poles >= 2) {
+    activeMotorPoles = motor.poles;
+    localStorage.setItem('activeMotorPoles', motor.poles);
+    if (errEl) errEl.style.display = 'none';
+    // Tell mock server which motor is active so it simulates correct eRPM
+    // (no-op on real hardware — _sim_motor returns ERROR which is silently ignored)
+    const simKv = kv || (motor.kvList?.[0]) || 0;
+    if (simKv) send(`_sim_motor ${simKv}kv ${motor.poles}poles\n`);
+  } else {
+    activeMotorPoles = null;
+    localStorage.removeItem('activeMotorPoles');
+    if (errEl) {
+      errEl.textContent = `⚠ ${vendor} ${model} has no pole count set — RPM and Kᵥ cannot be calculated. Edit the motor in the Motors tab to add it.`;
+      errEl.style.display = 'block';
+    }
+  }
+  showToast(`Loaded ${vendor} ${model}${kv?' @ '+kv+' Kv':''} — review then Save.`, 'success');
+}
+
+function saveMotorPreset() {
+  const vendor = document.getElementById('preset-vendor')?.value;
+  const model  = document.getElementById('preset-model')?.value;
+  const kv     = document.getElementById('preset-kv')?.value;
+  if (!vendor||!model) { showToast('Select vendor and model to save against.', 'error'); return; }
+  const slug = (vendor+'_'+model+'_'+(kv||'all')).replace(/[^a-zA-Z0-9]/g,'_').toLowerCase();
+  const params = getCurrentEcomValues();
+  const payload = JSON.stringify({ name:`${vendor} ${model}${kv?' '+kv+'Kv':''}`, ...params });
+  send(`_preset_save ${slug}\t${payload}\n`);
+  // Update IndexedDB record params too
+  const motor = allMotors.find(m=>m.vendor===vendor&&m.model===model);
+  if (motor) { dbPut({ ...motor, params }); }
+  showToast(`Saved ESC params for ${vendor} ${model}.`, 'success');
 }
 
 function getCurrentEcomValues() {
-	const vals = {};
-	ecomKeys.forEach(p => {
-		const el = document.getElementById('ecom_' + p.key);
-		if (!el) return;
-		vals[p.key] = p.type === 'bool' ? (el.checked ? 1 : 0) : (parseFloat(el.value) || 0);
-	});
-	return vals;
-}
-
-function savePresetToFlash() {
-	const name = document.getElementById('preset-name').value.trim();
-	if (!name) { showToast('Enter a preset name first.', 'error'); return; }
-	const vals = getCurrentEcomValues();
-	const slug = name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-	const payload = JSON.stringify({ name, ...vals });
-	send(`_preset_save ${slug}\t${payload}\n`);
-	// Track slug in localStorage so the tag row stays populated
-	const saved = JSON.parse(localStorage.getItem('savedPresets') || '[]');
-	if (!saved.includes(slug)) { saved.push(slug); localStorage.setItem('savedPresets', JSON.stringify(saved)); }
-	showToast(`Preset "${name}" saved to device.`, 'success');
-	refreshSavedPresets();
-}
-
-function exportPreset() {
-	const name = document.getElementById('preset-name').value.trim() || 'ecom_preset';
-	const vals = getCurrentEcomValues();
-	const blob = new Blob([JSON.stringify({ name, ...vals }, null, 2)], { type: 'application/json' });
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement('a');
-	a.href = url;
-	a.download = name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() + '.json';
-	a.click();
-	URL.revokeObjectURL(url);
-	showToast('Preset exported.', 'success');
+  const vals = {};
+  ecomKeys.forEach(p => {
+    const el = document.getElementById('ecom_'+p.key);
+    if (!el) return;
+    vals[p.key] = p.type==='bool' ? (el.checked?1:0) : (parseFloat(el.value)||0);
+  });
+  return vals;
 }
 
 function refreshSavedPresets() {
-	const stored = JSON.parse(localStorage.getItem('savedPresets') || '[]');
-	const row = document.getElementById('saved-presets-row');
-	if (!stored.length) { row.innerHTML = '<span style="color:var(--text3);font-size:0.72rem">No saved presets yet.</span>'; return; }
-	row.innerHTML = stored.map(p =>
-		`<span class="preset-tag">${p.replace(/_/g,' ')} ` +
-		`<span onclick="loadSavedPreset('${p}')" style="cursor:pointer" title="Load">↑</span> ` +
-		`<span onclick="deleteSavedPreset('${p}')" style="cursor:pointer;opacity:0.5" title="Remove from list">×</span></span>`
-	).join('');
+  // No longer using localStorage-tracked saved preset tags with the new motor system
+  const row = document.getElementById('saved-presets-row');
+  if (row) row.innerHTML = '';
 }
 
-function deleteSavedPreset(slug) {
-	const saved = JSON.parse(localStorage.getItem('savedPresets') || '[]');
-	const updated = saved.filter(s => s !== slug);
-	localStorage.setItem('savedPresets', JSON.stringify(updated));
-	refreshSavedPresets();
-	showToast(`Removed "${slug}" from list (still on device).`, '');
-}
-
-async function loadSavedPreset(slug) {
-	try {
-		const resp = await fetch(`/preset/${slug}.json`);
-		if (!resp.ok) throw new Error();
-		const preset = await resp.json();
-		Object.assign(ecomVals, preset);
-		ecomKeys.forEach(p => { if (p.key in preset) setparam(p.key, String(preset[p.key])); });
-		buildEcomGrid();
-		showToast(`Loaded "${slug}".`, 'success');
-	} catch {
-		showToast('Could not load saved preset.', 'error');
-	}
-}
 
 /* ─────────────────────────────────────────────────────
    Init
 ───────────────────────────────────────────────────── */
-setlang(localStorage.getItem('lang') || navigator.language.substring(0, 2) || 'en');
-setvolume(25);
-refreshSavedPresets();
-opentab(1);
+(async () => {
+	await setlang(localStorage.getItem('lang') || navigator.language.substring(0, 2) || 'en');
+	setvolume(25);
+	// Restore active motor poles for RPM/Kv display
+	activeMotorPoles = parseInt(localStorage.getItem('activeMotorPoles')) || null;
+	// Init motor DB and populate preset selectors (non-blocking)
+	initMotorDb().then(() => populatePresetSelectors());
+	opentab(5);
+})();
 </script>
 </body>
 </html>
