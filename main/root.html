@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<link rel="icon" type="image/x-icon" href="/favicon.ico">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AART Remora™ Programmer</title>
@@ -914,12 +913,12 @@ function opentab(n) {
 			break;
 		case 5:
 			if (delayed) { timer = setTimeout(() => { delayed = null; opentab(5); }, 2000); break; }
+			showtab(5);  // show tab immediately; ecom-grid fills in when show response arrives
 			ival = setInterval(() => { send('info\n'); }, 500);
 			send('info\n');
 			send('show\n');
 			// Restore preset selector state (preserves vendor/model/Kv across tab switches)
 			populatePresetSelectors();
-			// No show-watchdog: eCom grid is one-shot. info interval keeps connection alive.
 			break;
 		case 6:
 			showtab(6);

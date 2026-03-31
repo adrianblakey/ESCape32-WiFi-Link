@@ -1,6 +1,5 @@
 /*
 ** Copyright (C) 2023 Arseny Vakhrushev <arseny.vakhrushev@me.com>
-** AART Wi-Fi Link extensions (C) 2024 AART (aart.dev)
 **
 ** This firmware is free software: you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,37 +15,27 @@
 ** along with this firmware. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef LINUX_NATIVE_BUILD
-/* Native Linux build: replace all ESP-IDF headers with shims */
-#  include "esp_idf_shims.h"
-   /* httpd_run_forever() declared in linux_httpd.c */
-   extern void httpd_run_forever(void *h);
-   extern int  g_http_port;
-#else
-#  include "nvs_flash.h"
-#  include "nvs.h"
-#  include "esp_crc.h"
-#  include "esp_log.h"
-#  include "esp_wifi.h"
-#  include "esp_http_server.h"
-#  include "driver/gpio.h"
-#  include "driver/uart.h"
-#  include "lwip/sockets.h"
-#  include "mdns.h"
-#  include "build_defs.h"
-#endif
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
+#include "nvs_flash.h"
+#include "nvs.h"
+#include "esp_crc.h"
+#include "esp_log.h"
+#include "esp_wifi.h"
+#include "esp_http_server.h"
+#include "driver/gpio.h"
+#include "driver/uart.h"
+#include "lwip/sockets.h"
+#include "mdns.h"
+#include "build_defs.h"
 
-#define DEFAULT_SSID     "ESCape32-WiFi-Link"
-#define DEFAULT_HOSTNAME "escape32"
-#define NVS_NAMESPACE    "aart_wifi"
-#define NVS_KEY_SSID     "ssid"
-#define NVS_KEY_PASS     "pass"
-#define NVS_PRESET_NS    "aart_pre"
-/* Preset key prefix stored in NVS; slug truncated to 15 chars to fit NVS key limit */
-#define MAX_PRESET_SLUG  15
+#define SSID      "ESCape32-WiFi-Link"
+#define HOSTNAME  "escape32"
+
+#define NVS_NAMESPACE  "remora"
+#define NVS_KEY_SSID   "ssid"
+#define NVS_KEY_PASS   "pass"
+
+/* Maximum slug length for saved presets */
+#define MAX_PRESET_SLUG 48
 
 #define CMD_PROBE  0
 #define CMD_INFO   1
@@ -73,13 +62,14 @@ typedef struct __attribute__((__packed__)) {
 	uint32_t addr;
 } DNSAnswer;
 
-#ifndef LINUX_NATIVE_BUILD
-extern const char _binary_root_html_gz_start[], _binary_root_html_gz_end[];
+extern const uint8_t _binary_root_html_gz_start[];
+extern const uint8_t _binary_root_html_gz_end[];
+
 #define XX(lang) \
-extern const char _binary_root_##lang##_json_gz_start[], _binary_root_##lang##_json_gz_end[];
+extern const uint8_t _binary_root_##lang##_json_gz_start[]; \
+extern const uint8_t _binary_root_##lang##_json_gz_end[];
 LANG_LIST(XX)
 #undef XX
-#endif /* LINUX_NATIVE_BUILD */
 
 static httpd_handle_t server;
 static QueueHandle_t queue;
@@ -94,40 +84,6 @@ static void setled(int x) {
 #endif
 	gpio_set_level(CONFIG_LED_PIN, x);
 }
-
-/* ── NVS helpers ────────────────────────────────────────────────────── */
-
-static esp_err_t nvs_read_str(const char *ns, const char *key, char *out, size_t maxlen) {
-	nvs_handle_t h;
-	esp_err_t err = nvs_open(ns, NVS_READONLY, &h);
-	if (err != ESP_OK) return err;
-	size_t len = maxlen;
-	err = nvs_get_str(h, key, out, &len);
-	nvs_close(h);
-	return err;
-}
-
-static esp_err_t nvs_write_str(const char *ns, const char *key, const char *val) {
-	nvs_handle_t h;
-	esp_err_t err = nvs_open(ns, NVS_READWRITE, &h);
-	if (err != ESP_OK) return err;
-	err = nvs_set_str(h, key, val);
-	if (err == ESP_OK) err = nvs_commit(h);
-	nvs_close(h);
-	return err;
-}
-
-static esp_err_t nvs_erase_key_ns(const char *ns, const char *key) {
-	nvs_handle_t h;
-	esp_err_t err = nvs_open(ns, NVS_READWRITE, &h);
-	if (err != ESP_OK) return err;
-	nvs_erase_key(h, key); /* ignore error — key may not exist */
-	err = nvs_commit(h);
-	nvs_close(h);
-	return err;
-}
-
-/* ── DNS ────────────────────────────────────────────────────────────── */
 
 int processdns(uint8_t *buf, int len) {
 	if (len < (int)sizeof(DNSHeader)) return 0;
@@ -158,11 +114,42 @@ int processdns(uint8_t *buf, int len) {
 		++cnt;
 	}
 	memmove(cur, end, pos - end);
-	header->flags  = htons(flags | 0x8000);
-	header->ancnt  = htons(cnt);
-	header->nscnt  = 0;
-	header->arcnt  = 0;
+	header->flags = htons(flags | 0x8000);
+	header->ancnt = htons(cnt);
+	header->nscnt = 0;
+	header->arcnt = 0;
 	return pos - end + cur - buf;
+}
+
+/* ── NVS helpers ────────────────────────────────────────────────────── */
+
+static esp_err_t nvs_read_str(const char *ns, const char *key, char *out, size_t outsz) {
+	nvs_handle_t h;
+	esp_err_t err = nvs_open(ns, NVS_READONLY, &h);
+	if (err != ESP_OK) return err;
+	err = nvs_get_str(h, key, out, &outsz);
+	nvs_close(h);
+	return err;
+}
+
+static esp_err_t nvs_write_str(const char *ns, const char *key, const char *val) {
+	nvs_handle_t h;
+	esp_err_t err = nvs_open(ns, NVS_READWRITE, &h);
+	if (err != ESP_OK) return err;
+	err = nvs_set_str(h, key, val);
+	if (err == ESP_OK) err = nvs_commit(h);
+	nvs_close(h);
+	return err;
+}
+
+static esp_err_t nvs_erase_key_ns(const char *ns, const char *key) {
+	nvs_handle_t h;
+	esp_err_t err = nvs_open(ns, NVS_READWRITE, &h);
+	if (err != ESP_OK) return err;
+	nvs_erase_key(h, key);   /* ignore not-found */
+	err = nvs_commit(h);
+	nvs_close(h);
+	return err;
 }
 
 /* ── UART helpers ───────────────────────────────────────────────────── */
@@ -188,8 +175,8 @@ static int recvbuf(uint8_t *buf, int len, int all) {
 		pos += size;
 		len -= size;
 		if (all) continue;
-		if (pos >= 3  && !memcmp(buf - 3,  "OK\n",    3)) break;
-		if (pos >= 6  && !memcmp(buf - 6,  "ERROR\n", 6)) break;
+		if (pos >= 3 && !memcmp(buf - 3, "OK\n",    3)) break;
+		if (pos >= 6 && !memcmp(buf - 6, "ERROR\n", 6)) break;
 	}
 	return pos;
 }
@@ -225,19 +212,19 @@ static void senddata(const uint8_t *buf, int len) {
 	sendbuf((uint8_t *)&crc, 4);
 }
 
-static char *checkcmd(uint8_t *buf, int len, const char *cmd) {
-	int n = strlen(cmd);
-	return len < n || memcmp(buf, cmd, n) || (buf[n] != ' ' && buf[n] != '\n') ? 0 : (char *)buf + n;
+/* ── Preset storage in NVS ──────────────────────────────────────────── */
+/* Presets stored as NVS strings: key = "p_<slug>", value = JSON payload */
+
+static esp_err_t preset_save(const char *slug, const char *json) {
+	char key[MAX_PRESET_SLUG + 3];
+	snprintf(key, sizeof key, "p_%s", slug);
+	return nvs_write_str(NVS_NAMESPACE, key, json);
 }
 
-static void notify(httpd_req_t *req, const char *key, int val) {
-	char buf[32];
-	httpd_ws_frame_t frame = {
-		.type    = HTTPD_WS_TYPE_TEXT,
-		.payload = (uint8_t *)buf,
-		.len     = sprintf(buf, "%s %d\n", key, val),
-	};
-	httpd_ws_send_frame(req, &frame);
+static esp_err_t preset_load(const char *slug, char *out, size_t outsz) {
+	char key[MAX_PRESET_SLUG + 3];
+	snprintf(key, sizeof key, "p_%s", slug);
+	return nvs_read_str(NVS_NAMESPACE, key, out, outsz);
 }
 
 /* ── HTTP handlers ──────────────────────────────────────────────────── */
@@ -253,13 +240,13 @@ static esp_err_t roothandler(httpd_req_t *req) {
 	const char *buf = req->uri;
 	ssize_t len;
 	if (!strcmp(buf, "/")) {
-		buf = _binary_root_html_gz_start;
-		len = _binary_root_html_gz_end - _binary_root_html_gz_start;
+		buf = (const char *)_binary_root_html_gz_start;
+		len = (ssize_t)(_binary_root_html_gz_end - _binary_root_html_gz_start);
 	}
 #define XX(lang) \
 	else if (!strcmp(buf, "/?" #lang)) { \
-		buf = _binary_root_##lang##_json_gz_start; \
-		len = _binary_root_##lang##_json_gz_end - _binary_root_##lang##_json_gz_start; \
+		buf = (const char *)_binary_root_##lang##_json_gz_start; \
+		len = (ssize_t)(_binary_root_##lang##_json_gz_end - _binary_root_##lang##_json_gz_start); \
 	}
 LANG_LIST(XX)
 #undef XX
@@ -268,34 +255,34 @@ LANG_LIST(XX)
 		httpd_resp_send(req, 0, 0);
 		return 0;
 	}
-	httpd_resp_set_type(req, buf == _binary_root_html_gz_start ? "text/html" : "text/json");
+	httpd_resp_set_type(req, buf == (const char *)_binary_root_html_gz_start ? "text/html" : "text/json");
 	httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
 	httpd_resp_send(req, buf, len);
 	return 0;
 }
 
-/* Serve stored presets from NVS at /preset/<slug>.json */
+/* Serve stored presets: GET /preset/<slug>.json */
 static esp_err_t presethandler(httpd_req_t *req) {
-	/* URI is /preset/<slug>.json — extract slug */
 	const char *uri = req->uri;
-	const char *prefix = "/preset/";
-	if (strncmp(uri, prefix, strlen(prefix)) != 0) {
+	/* Extract slug from /preset/<slug>.json */
+	const char *start = uri + 8;   /* skip "/preset/" */
+	const char *dot   = strrchr(start, '.');
+	if (!dot || strcmp(dot, ".json")) {
 		httpd_resp_set_status(req, "400 Bad Request");
 		httpd_resp_send(req, 0, 0);
 		return 0;
 	}
-	char slug[32];
-	strncpy(slug, uri + strlen(prefix), sizeof slug - 1);
-	slug[sizeof slug - 1] = '\0';
-	/* Strip .json suffix */
-	char *dot = strrchr(slug, '.');
-	if (dot) *dot = '\0';
-	/* Truncate to NVS key limit */
-	slug[MAX_PRESET_SLUG] = '\0';
-
-	char json[512];
-	esp_err_t err = nvs_read_str(NVS_PRESET_NS, slug, json, sizeof json);
-	if (err != ESP_OK) {
+	char slug[MAX_PRESET_SLUG + 1];
+	int slen = (int)(dot - start);
+	if (slen < 1 || slen > MAX_PRESET_SLUG) {
+		httpd_resp_set_status(req, "404 Not Found");
+		httpd_resp_send(req, 0, 0);
+		return 0;
+	}
+	memcpy(slug, start, slen);
+	slug[slen] = '\0';
+	char json[4096];
+	if (preset_load(slug, json, sizeof json) != ESP_OK) {
 		httpd_resp_set_status(req, "404 Not Found");
 		httpd_resp_send(req, 0, 0);
 		return 0;
@@ -307,6 +294,21 @@ static esp_err_t presethandler(httpd_req_t *req) {
 
 /* ── WebSocket handler ──────────────────────────────────────────────── */
 
+static char *checkcmd(uint8_t *buf, int len, const char *cmd) {
+	int n = strlen(cmd);
+	return len < n || memcmp(buf, cmd, n) || (buf[n] != ' ' && buf[n] != '\n') ? 0 : (char *)buf + n;
+}
+
+static void notify(httpd_req_t *req, const char *key, int val) {
+	char buf[32];
+	httpd_ws_frame_t frame = {
+		.type    = HTTPD_WS_TYPE_TEXT,
+		.payload = (uint8_t *)buf,
+		.len     = sprintf(buf, "%s %d\n", key, val),
+	};
+	httpd_ws_send_frame(req, &frame);
+}
+
 static esp_err_t wshandler(httpd_req_t *req) {
 	static int size, boot, wrp, ofs;
 	if (req->method == HTTP_GET) return 0;
@@ -316,12 +318,13 @@ static esp_err_t wshandler(httpd_req_t *req) {
 	int res = -1;
 	switch (frame.type) {
 		case HTTPD_WS_TYPE_TEXT: {
-			uint8_t buf[1200];
+			uint8_t buf[4096];
 			frame.payload = buf;
-			if (httpd_ws_recv_frame(req, &frame, sizeof buf)) return -1;
+			if (httpd_ws_recv_frame(req, &frame, sizeof buf - 1)) return -1;
+			buf[len] = '\0';
 			char *arg;
 
-			/* ── Existing ESCape32 commands ── */
+			/* ── Bootloader / firmware commands ── */
 			if ((arg = checkcmd(buf, len, "_probe"))) {
 				if (*arg != '\n') goto done;
 				sendval(CMD_PROBE);
@@ -360,26 +363,24 @@ static esp_err_t wshandler(httpd_req_t *req) {
 				goto done;
 			}
 
-			/* ── Wi-Fi config commands ── */
+			/* ── Wi-Fi config ── */
 			if ((arg = checkcmd(buf, len, "_wifi_get"))) {
 				char ssid[33] = {0}, pass[65] = {0};
 				nvs_read_str(NVS_NAMESPACE, NVS_KEY_SSID, ssid, sizeof ssid);
 				nvs_read_str(NVS_NAMESPACE, NVS_KEY_PASS, pass, sizeof pass);
-				if (!ssid[0]) strncpy(ssid, DEFAULT_SSID, sizeof ssid - 1);
+				if (!ssid[0]) strncpy(ssid, SSID, sizeof ssid - 1);
 				len += sprintf((char *)buf + len, "%s\t%s\n", ssid, pass);
 				res = 0;
 				goto done;
 			}
 			if ((arg = checkcmd(buf, len, "_wifi_set"))) {
-				/* Format: "_wifi_set <ssid>\t<pass>\n" */
 				++arg; /* skip space */
-				/* Null-terminate at \n */
-				char *nl = memchr(arg, '\n', len - (arg - (char *)buf));
+				char *nl  = memchr(arg, '\n', len - (arg - (char *)buf));
 				if (nl) *nl = '\0';
 				char *tab = strchr(arg, '\t');
 				char ssid[33] = {0}, pass[65] = {0};
 				if (tab) {
-					int slen = tab - arg;
+					int slen = (int)(tab - arg);
 					if (slen > 32) slen = 32;
 					memcpy(ssid, arg, slen);
 					strncpy(pass, tab + 1, 64);
@@ -387,34 +388,32 @@ static esp_err_t wshandler(httpd_req_t *req) {
 					strncpy(ssid, arg, 32);
 				}
 				if (!ssid[0]) { res = -1; goto done; }
-				esp_err_t err1 = nvs_write_str(NVS_NAMESPACE, NVS_KEY_SSID, ssid);
-				esp_err_t err2 = pass[0]
+				esp_err_t e1 = nvs_write_str(NVS_NAMESPACE, NVS_KEY_SSID, ssid);
+				esp_err_t e2 = pass[0]
 					? nvs_write_str(NVS_NAMESPACE, NVS_KEY_PASS, pass)
 					: nvs_erase_key_ns(NVS_NAMESPACE, NVS_KEY_PASS);
-				res = (err1 == ESP_OK && err2 == ESP_OK) ? 0 : -1;
+				res = (e1 == ESP_OK && e2 == ESP_OK) ? 0 : -1;
 				goto done;
 			}
 
-			/* ── Preset save command ── */
+			/* ── Preset save ── */
 			if ((arg = checkcmd(buf, len, "_preset_save"))) {
 				++arg; /* skip space */
 				char *tab = memchr(arg, '\t', len - (arg - (char *)buf));
 				if (!tab) { res = -1; goto done; }
 				char slug[MAX_PRESET_SLUG + 1];
-				int slen = tab - arg;
+				int slen = (int)(tab - arg);
 				if (slen > MAX_PRESET_SLUG) slen = MAX_PRESET_SLUG;
 				memcpy(slug, arg, slen);
 				slug[slen] = '\0';
 				char *json = tab + 1;
-				/* Null-terminate at \n */
-				char *nl = memchr(json, '\n', len - (json - (char *)buf));
-				if (nl) *nl = '\0';
-				esp_err_t err = nvs_write_str(NVS_PRESET_NS, slug, json);
-				res = (err == ESP_OK) ? 0 : -1;
+				/* Null-terminate json at \n or end of buffer */
+				/* JSON payload: buf[len]='\0' was set on entry so json is safe to use as-is */
+				res = preset_save(slug, json) == ESP_OK ? 0 : -1;
 				goto done;
 			}
 
-			/* ── ESC CLI passthrough ── */
+			/* ── ESC CLI passthrough (show, info, get, set, save, reset, throt, play …) ── */
 			sendbuf(buf, len);
 			if (checkcmd(buf, len, "play")) return 0;
 			int pos = recvbuf(buf + len, sizeof buf - len, 0);
@@ -431,17 +430,14 @@ static esp_err_t wshandler(httpd_req_t *req) {
 			ESP_LOGI("httpd_ws", "Updating... [size %d, boot %d, wrp 0x%02x, ofs %d, len %d]", size, boot, wrp, ofs, len);
 			uint8_t *buf = 0;
 			if (ofs + len > size || (boot && len > 4096) || !(len = (len + 3) & ~3)) {
-				res = -1001;
-				goto error;
+				res = -1001; goto error;
 			}
 			if (!(buf = malloc(len))) {
-				res = -1002;
-				goto error;
+				res = -1002; goto error;
 			}
 			frame.payload = memset(buf, 0xff, len);
 			if (httpd_ws_recv_frame(req, &frame, len)) {
-				res = -1003;
-				goto error;
+				res = -1003; goto error;
 			}
 			if (boot) {
 				if (!(len & 1023) && len != 4096) len += 4;
@@ -482,8 +478,6 @@ static esp_err_t wshandler(httpd_req_t *req) {
 	}
 }
 
-/* ── URI registration ───────────────────────────────────────────────── */
-
 static void addhandler(const char *path, esp_err_t (*handler)(httpd_req_t *)) {
 	const httpd_uri_t uri = {
 		.uri          = path,
@@ -502,8 +496,6 @@ static void disconnhandler(void *arg, esp_event_base_t base, int32_t id, void *d
 	ESP_LOGI("httpd", "Socket %d disconnected", *(int *)data);
 }
 
-/* ── app_main ───────────────────────────────────────────────────────── */
-
 void app_main(void) {
 	gpio_set_direction(CONFIG_LED_PIN, GPIO_MODE_OUTPUT);
 	setled(1);
@@ -520,29 +512,28 @@ void app_main(void) {
 	wifi_init_config_t wicfg = WIFI_INIT_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK(esp_wifi_init(&wicfg));
 
-	/* Read persisted Wi-Fi credentials */
-	char ssid[33] = DEFAULT_SSID;
-	char pass[65] = {0};
+	/* Load SSID/pass from NVS, fall back to defaults */
+	char ssid[33] = {0}, pass[65] = {0};
 	nvs_read_str(NVS_NAMESPACE, NVS_KEY_SSID, ssid, sizeof ssid);
 	nvs_read_str(NVS_NAMESPACE, NVS_KEY_PASS, pass, sizeof pass);
-	if (!ssid[0]) strncpy(ssid, DEFAULT_SSID, sizeof ssid - 1);
+	if (!ssid[0]) strncpy(ssid, SSID, sizeof ssid - 1);
 
-	wifi_config_t wcfg = {
-		.ap = {
-			.ssid_len       = 0, /* auto from null-term */
-			.max_connection = 1,
-			.authmode       = pass[0] ? WIFI_AUTH_WPA2_PSK : WIFI_AUTH_OPEN,
-		},
-	};
+	wifi_config_t wcfg = {0};
 	strncpy((char *)wcfg.ap.ssid, ssid, sizeof wcfg.ap.ssid - 1);
-	if (pass[0]) strncpy((char *)wcfg.ap.password, pass, sizeof wcfg.ap.password - 1);
-
+	wcfg.ap.ssid_len      = strlen(ssid);
+	wcfg.ap.max_connection = 4;
+	if (pass[0]) {
+		strncpy((char *)wcfg.ap.password, pass, sizeof wcfg.ap.password - 1);
+		wcfg.ap.authmode = WIFI_AUTH_WPA2_PSK;
+	} else {
+		wcfg.ap.authmode = WIFI_AUTH_OPEN;
+	}
 	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wcfg));
+	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wcfg));
 	ESP_ERROR_CHECK(esp_wifi_start());
 
 	ESP_ERROR_CHECK(mdns_init());
-	ESP_ERROR_CHECK(mdns_hostname_set(DEFAULT_HOSTNAME));
+	ESP_ERROR_CHECK(mdns_hostname_set(HOSTNAME));
 
 	uart_config_t ucfg = {
 		.baud_rate  = 38400,
@@ -558,23 +549,17 @@ void app_main(void) {
 	ESP_ERROR_CHECK(uart_set_mode(CONFIG_UART_NUM, UART_MODE_RS485_HALF_DUPLEX));
 
 	httpd_config_t hcfg = HTTPD_DEFAULT_CONFIG();
-#ifdef LINUX_NATIVE_BUILD
-	hcfg.server_port = g_http_port;
-#endif
 	hcfg.max_open_sockets = CONFIG_LWIP_MAX_SOCKETS - 3;
 	hcfg.lru_purge_enable = true;
-	/* Allow longer URIs for /preset/<slug>.json */
-	hcfg.uri_match_fn = httpd_uri_match_wildcard;
 	ESP_ERROR_CHECK(httpd_start(&server, &hcfg));
 	ESP_ERROR_CHECK(httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http404handler));
-	addhandler("/",          roothandler);
-	addhandler("/ws",        wshandler);
-	addhandler("/preset/*",  presethandler);
+	addhandler("/",         roothandler);
+	addhandler("/ws",       wshandler);
+	addhandler("/preset/*", presethandler);
 
-	ESP_ERROR_CHECK(esp_event_handler_register(ESP_HTTP_SERVER_EVENT, HTTP_SERVER_EVENT_ON_CONNECTED,  &connhandler,   0));
+	ESP_ERROR_CHECK(esp_event_handler_register(ESP_HTTP_SERVER_EVENT, HTTP_SERVER_EVENT_ON_CONNECTED,  &connhandler,    0));
 	ESP_ERROR_CHECK(esp_event_handler_register(ESP_HTTP_SERVER_EVENT, HTTP_SERVER_EVENT_DISCONNECTED,  &disconnhandler, 0));
 
-#ifndef DNS_DISABLED
 	/* DNS captive portal */
 	int fd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (fd == -1) {
@@ -611,8 +596,4 @@ void app_main(void) {
 		ESP_LOGI("dns", "Processed request (%d bytes -> %d bytes)", len1, len2);
 	}
 	close(fd);
-#else  /* DNS_DISABLED */
-	setled(0);
-	httpd_run_forever(server);
-#endif
 }
