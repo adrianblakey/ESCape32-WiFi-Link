@@ -509,7 +509,7 @@ b.kbd {
 		<table class="show" id="show"></table>
 		<div class="btn-row">
 			<button class="primary" data-lang="B00" onclick="savecfg()"></button>
-			<button data-lang="B01" onclick="resetcfg()"></button>
+			<button data-lang="B01" onpointerdown="resetcfg()" onpointerup="resetcfg(true)" onpointerleave="resetcfg(true)" onpointercancel="resetcfg(true)"></button>
 			<span class="result" id="result1"></span>
 		</div>
 		<hr>
@@ -844,7 +844,7 @@ async function setlang(lang) {
 /* ─────────────────────────────────────────────────────
    WebSocket
 ───────────────────────────────────────────────────── */
-let ws, bn, bi, ival, timer, target, throtval, delayed, blocked, tabnum, tabvis = {};
+let ws, bn, bi, rt, ival, timer, target, throtval, delayed, blocked, tabnum, tabvis = {};
 
 function send(cmd) {
 	if (ws && ws.readyState == ws.OPEN) ws.send(cmd);
@@ -1279,7 +1279,12 @@ function setvolume(val) {
 	document.getElementById('volval').innerHTML = `${val}%`;
 }
 function savecfg() { send('save\n'); }
-function resetcfg() { send('reset\n'); }
+function resetcfg(cancel) {
+	if (rt) { clearTimeout(rt); bn = 8; }
+	if (cancel) return;
+	rt = setTimeout(() => {rt = null, send('reset\n')}, 2000);
+	setresult(1, null, 'S29', 5);
+}
 
 function parsemusic() {
 	const data = document.getElementById('music').value.replace(/\s+/g, '');
